@@ -7,7 +7,7 @@ def iniciar_aplicacion():
     config, existe_config = cargar_config()
     
     root = tk.Tk()
-    root.title("N43_Converter")
+    root.title("CSVtoN43")
     root.geometry("500x250")
 
     # ─────────────────────────────────────────

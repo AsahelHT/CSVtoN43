@@ -8,7 +8,7 @@ def mostrar_informacion():
     info_win.geometry("500x300")
 
     texto = (
-        "N43 Converter es una herramienta para convertir extractos bancarios en formato CSV\n"
+        "CSVtoN43 es una herramienta para convertir extractos bancarios en formato CSV\n"
         "a archivos compatibles con la Norma 43 del estándar bancario español.\n\n"
         "Puedes configurar fácilmente los campos, seleccionar la divisa y generar\n"
         "archivos en formato AEB43 (Norma53) compatibles con sistemas contables.\n"
@@ -18,7 +18,7 @@ def mostrar_informacion():
     lbl.pack(padx=10, pady=10)
 
     def abrir_link():
-        webbrowser.open("https://github.com/AsahelHT/N43_Converter")
+        webbrowser.open("https://github.com/AsahelHT/CSVtoN43")
 
     btn_link = tk.Button(info_win,font=("Arial", 12), text="📎 Ir al repositorio Github", command=abrir_link)
     btn_link.pack(pady=10)

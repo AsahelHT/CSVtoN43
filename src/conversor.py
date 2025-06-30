@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from decimal import Decimal
 from tkinter import filedialog, messagebox
-from configuracion import guardar_config
+from config_gui import guardar_config
 
 def formatea_texto(texto, longitud):
     return texto.upper().strip().ljust(longitud)[:longitud]
