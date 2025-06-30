@@ -4,6 +4,7 @@ import tkinter as tk
 
 def mostrar_informacion():
     info_win = tk.Toplevel()
+    info_win.iconbitmap("../media/icon.ico")
     info_win.title("Información de la aplicación")
     info_win.geometry("500x300")
 

@@ -50,10 +50,11 @@ SUGERENCIAS_COLUMNAS = {
     'campo_ref2': ['referencia 2', 'ref2']
 }
 
-
 class ConfiguracionVentana(tk.Toplevel):
     def __init__(self, parent, config):
         super().__init__(parent)
+
+        self.iconbitmap("../media/icon.ico")
         
         self.configuracion = config
         self.df_columnas = []

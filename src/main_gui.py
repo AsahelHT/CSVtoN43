@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import PhotoImage
 from config_gui import cargar_config, mostrar_configuracion
 from info_gui import mostrar_informacion
 from conversor import convertir_con_archivo
@@ -8,6 +9,7 @@ def iniciar_aplicacion():
     
     root = tk.Tk()
     root.title("CSVtoN43")
+    root.iconbitmap("../media/icon.ico")
     root.geometry("500x250")
 
     # ─────────────────────────────────────────
