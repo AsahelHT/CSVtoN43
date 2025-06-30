@@ -1,9 +1,12 @@
-# gui.py
 import os
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import filedialog, messagebox
+from ttkbootstrap import Style
+from ttkbootstrap.widgets import Combobox, Entry, Button, Frame, Label, LabelFrame, Treeview, Scrollbar
 import pandas as pd
 import json
+import csv
+
 
 CONFIG_FILE = 'config.json'
 
@@ -53,21 +56,22 @@ SUGERENCIAS_COLUMNAS = {
 class ConfiguracionVentana(tk.Toplevel):
     def __init__(self, parent, config):
         super().__init__(parent)
-
         self.iconbitmap("../media/icon.ico")
-        
         self.configuracion = config
         self.df_columnas = []
 
+        self.title("⚙️ Configuración de campos")
+        self.geometry("1500x650")
+        self.minsize(950, 500)
 
-        if not os.path.exists("config.json"):
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1, uniform="col")
+        self.grid_columnconfigure(1, weight=2, uniform="col")
+
+        if not os.path.exists(CONFIG_FILE):
             self._solicitar_csv()
-
         if self._configuracion_vacia():
             self._solicitar_csv()
-
-        self.title("Configuración")
-        self.geometry("900x600")
 
         self.vars = {}
         self._leer_columnas_csv()
@@ -75,23 +79,16 @@ class ConfiguracionVentana(tk.Toplevel):
         self._crear_preview()
 
     def _configuracion_vacia(self):
-        campos_requeridos = [
-            'campo_fecha', 'campo_valor', 'campo_concepto', 'campo_ref1',
-            'campo_importe', 'campo_cuenta', 'campo_saldo', 'campo_ref2'
-        ]
-        return not all(k in self.configuracion for k in campos_requeridos)
+        return not all(k in self.configuracion for k in SUGERENCIAS_COLUMNAS)
 
     def _solicitar_csv(self):
-        messagebox.showinfo("Carga inicial", "No se ha encontrado una configuración previa para procesar la información. \nSelecciona un archivo CSV para empezar a utilizar como plantilla.")
+        messagebox.showinfo("Carga inicial", "No se ha encontrado una configuración previa.\nSelecciona un archivo CSV para usarlo como plantilla.")
         archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
         if archivo:
             carpeta = os.path.dirname(archivo)
             self.configuracion['last_csv_path'] = carpeta
             self.configuracion['sep'] = self.configuracion.get('sep', ';')
-            for clave in [
-                'campo_fecha', 'campo_valor', 'campo_concepto', 'campo_ref1',
-                'campo_importe', 'campo_cuenta', 'campo_saldo', 'campo_ref2'
-            ]:
+            for clave in SUGERENCIAS_COLUMNAS:
                 self.configuracion[clave] = "Sin asignar"
             guardar_config(self.configuracion)
         else:
@@ -100,121 +97,114 @@ class ConfiguracionVentana(tk.Toplevel):
     def _leer_columnas_csv(self):
         try:
             path = self.configuracion.get("last_csv_path", "")
-            if not path:
-                return
             archivos = [f for f in os.listdir(path) if f.endswith(".csv")]
-            if not archivos:
-                return
             full_path = os.path.join(path, archivos[0])
-            df = pd.read_csv(full_path, sep=self.configuracion.get("sep", ";"), nrows=1)
-            self.df_columnas = df.columns.tolist()
 
+            with open(full_path, 'r', encoding='utf-8') as f:
+                sample = f.read(2048)
+                sniffer = csv.Sniffer()
+                dialect = sniffer.sniff(sample)
+                sep_detectado = dialect.delimiter
+                self.configuracion['sep'] = sep_detectado
+
+            df = pd.read_csv(full_path, sep=sep_detectado, nrows=1)
+
+            self.df_columnas = df.columns.tolist()
             self._asignar_campos_automaticamente()
         except:
             self.df_columnas = []
-            
-    def _asignar_campos_automaticamente(self):
-        columnas_csv_original = self.df_columnas  # Conservamos nombres originales
-        columnas_csv = [col.strip().lower() for col in columnas_csv_original]
 
+    def _asignar_campos_automaticamente(self):
+        columnas_csv = [col.strip().lower() for col in self.df_columnas]
         for clave, sugeridos in SUGERENCIAS_COLUMNAS.items():
             for sugerido in sugeridos:
-                sugerido_lower = sugerido.lower()
-                if sugerido_lower in columnas_csv:
-                    indice = columnas_csv.index(sugerido_lower)
-                    self.configuracion[clave] = columnas_csv_original[indice]  # Usamos el nombre original
+                if sugerido.lower() in columnas_csv:
+                    idx = columnas_csv.index(sugerido.lower())
+                    self.configuracion[clave] = self.df_columnas[idx]
                     break
 
     def _crear_campos(self):
-        frame = tk.Frame(self)
-        frame.pack(pady=10)
+        frame = Frame(self)
+        frame.grid(row=0, column=0, sticky="nsew", padx=15, pady=10)
+
+        frame.grid_columnconfigure(0, weight=0)
+        frame.grid_columnconfigure(1, weight=1)
 
         campos_texto = [
             ('Separador', 'sep'),
             ('Nombre Empresa', 'nombre_empresa'),
         ]
 
-        campos_combo = [
-            ('Fecha Operación', 'campo_fecha'),
-            ('Fecha Valor', 'campo_valor'),
-            ('Concepto', 'campo_concepto'),
-            ('Importe', 'campo_importe'),
-            ('Cuenta', 'campo_cuenta'),
-            ('Saldo', 'campo_saldo'),
-            ('Referencia 1', 'campo_ref1'),
-            ('Referencia 2', 'campo_ref2'),
-        ]
+        campos_combo = list(SUGERENCIAS_COLUMNAS.items())
 
         for i, (label, key) in enumerate(campos_texto):
-            tk.Label(frame, text=label).grid(row=i, column=0, sticky='e')
+            Label(frame, text=label, anchor='e').grid(row=i, column=0, sticky='e', padx=(0,10), pady=5)
             var = tk.StringVar(value=self.configuracion.get(key, ''))
             self.vars[key] = var
-            tk.Entry(frame, textvariable=var, width=30).grid(row=i, column=1, sticky='w')
+            if key == 'sep':
+                Entry(frame, textvariable=var, width=10, state='readonly').grid(row=i, column=1, sticky='w', padx=5, pady=5)
+            else:
+                Entry(frame, textvariable=var, width=35).grid(row=i, column=1, sticky='ew', padx=5, pady=5)
+
 
         offset = len(campos_texto)
-        for i, (label, key) in enumerate(campos_combo):
-            tk.Label(frame, text=label).grid(row=i+offset, column=0, sticky='e')
+        for i, (key, _) in enumerate(campos_combo):
+            label_text = key.replace("campo_", "").replace("_", " ").title()
+            Label(frame, text=label_text, anchor='e').grid(row=i+offset, column=0, sticky='e', padx=(0,10), pady=3)
             var = tk.StringVar(value=self.configuracion.get(key, ''))
             self.vars[key] = var
-            combo = ttk.Combobox(frame, textvariable=var, values=self.df_columnas, width=28)
-            combo.grid(row=i+offset, column=1, sticky='w')
+            combo = Combobox(frame, textvariable=var, values=self.df_columnas, width=33, bootstyle="primary")
+            combo.grid(row=i+offset, column=1, sticky='ew', padx=5, pady=3)
 
         row_total = offset + len(campos_combo)
-        # Campo para la divisa
-        tk.Label(frame, text="Divisa").grid(row=row_total, column=0, sticky='e')
+        Label(frame, text="Divisa", anchor='e').grid(row=row_total, column=0, sticky='e', padx=(0,10), pady=5)
         var_divisa = tk.StringVar(value=self.configuracion.get('divisa_nombre', 'Euro (EUR)'))
         self.vars['divisa_nombre'] = var_divisa
-        combo_divisa = ttk.Combobox(frame, textvariable=var_divisa, values=list(DIVISAS.keys()), width=28)
-        combo_divisa.grid(row=row_total, column=1, sticky='w')
-        
-        row_total += 1
-        tk.Button(frame, text="Guardar", command=self._guardar).grid(row=row_total, column=0, columnspan=2, pady=10)
-       
+        combo_divisa = Combobox(frame, textvariable=var_divisa, values=list(DIVISAS.keys()), width=33, bootstyle="success")
+        combo_divisa.grid(row=row_total, column=1, sticky='ew', padx=5, pady=5)
+
+        Button(
+            frame,
+            text="💾 Guardar configuración",
+            command=self._guardar,
+            bootstyle="info"
+        ).grid(row=row_total + 1, column=0, columnspan=2, pady=12, sticky='ew', padx=5)
+
     def _crear_preview(self):
-        self.preview_frame = tk.LabelFrame(self, text="Vista previa del CSV")
-        self.preview_frame.pack(pady=5, fill="both", expand=True)
+        self.preview_frame = LabelFrame(self, text="Vista previa de la plantilla CSV", bootstyle="light")
+        self.preview_frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=10)
 
-        self.tree = ttk.Treeview(self.preview_frame, show='headings')
-        self.tree.pack(fill="both", expand=True)
+        self.preview_frame.grid_rowconfigure(0, weight=1)
+        self.preview_frame.grid_columnconfigure(0, weight=1)
 
-        scrollbar = ttk.Scrollbar(self.preview_frame, orient="vertical", command=self.tree.yview)
+        self.tree = Treeview(self.preview_frame, show='headings')
+        self.tree.grid(row=0, column=0, sticky="nsew")
+
+        scrollbar = Scrollbar(self.preview_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scrollbar.set)
-        scrollbar.pack(side="right", fill="y")
+        scrollbar.grid(row=0, column=1, sticky="ns")
 
         self._cargar_preview_csv()
-
 
     def _cargar_preview_csv(self):
         try:
             path = self.configuracion.get("last_csv_path", "")
-            if not path:
-                return
             archivos = [f for f in os.listdir(path) if f.endswith(".csv")]
-            if not archivos:
-                return
             full_path = os.path.join(path, archivos[0])
             df = pd.read_csv(full_path, sep=self.configuracion.get("sep", ";"))
-            
-            self.preview_frame.config(text=f"Vista previa del CSV: {os.path.basename(full_path)}")
 
-            # Limpiar columnas y filas anteriores si las hay
-            for col in self.tree["columns"]:
-                self.tree.heading(col, text="")
-            self.tree.delete(*self.tree.get_children())
+            self.preview_frame.config(text=f"Vista previa de la plantilla CSV: {os.path.basename(full_path)}")
+
             self.tree["columns"] = list(df.columns)
-
             for col in df.columns:
                 self.tree.heading(col, text=col)
-                self.tree.column(col, width=100, anchor='center')
+                self.tree.column(col, width=120, anchor="center")
 
             for _, row in df.head(10).iterrows():
                 self.tree.insert("", "end", values=list(row))
 
         except Exception as e:
             messagebox.showerror("Error al cargar CSV", f"No se pudo cargar la vista previa del CSV.\n{e}")
-
-        except Exception as e:
-            messagebox.showerror("Error generando preview", str(e))
 
     def _guardar(self):
         for k, var in self.vars.items():
@@ -225,7 +215,6 @@ class ConfiguracionVentana(tk.Toplevel):
 
         guardar_config(self.configuracion)
         self.destroy()
-
 
 def mostrar_configuracion(parent, config):
     ConfiguracionVentana(parent, config)
