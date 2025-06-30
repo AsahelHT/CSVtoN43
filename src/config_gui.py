@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from ttkbootstrap import Style
@@ -7,8 +8,13 @@ import pandas as pd
 import json
 import csv
 
+import os
+import sys
 
-CONFIG_FILE = 'config.json'
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
+
+CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
 
 def cargar_config():
     existe = os.path.exists(CONFIG_FILE)
@@ -56,7 +62,7 @@ SUGERENCIAS_COLUMNAS = {
 class ConfiguracionVentana(tk.Toplevel):
     def __init__(self, parent, config):
         super().__init__(parent)
-        self.iconbitmap("../media/icon.ico")
+        self.iconbitmap(ICON_PATH)
         self.configuracion = config
         self.df_columnas = []
 

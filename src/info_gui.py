@@ -2,10 +2,18 @@
 import webbrowser
 import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
+import sys
+import os
+
+import os
+import sys
+
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
 
 def mostrar_informacion():
     info_win = ttk.Toplevel()
-    info_win.iconbitmap("../media/icon.ico")
+    info_win.iconbitmap(ICON_PATH)
     info_win.title("Información de la aplicación")
     info_win.geometry("500x400")
     info_win.resizable(False, False)

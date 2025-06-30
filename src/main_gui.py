@@ -5,11 +5,20 @@ from config_gui import cargar_config, mostrar_configuracion
 from info_gui import mostrar_informacion
 from conversor import convertir_con_archivo
 
+import os
+import sys
+
+import os
+import sys
+
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
+
 def iniciar_aplicacion():
     config, existe_config = cargar_config()
     app = ttk.Window(title="CSVtoN43", themename="darkly")
     app.geometry("500x250")
-    app.iconbitmap("../media/icon.ico")
+    app.iconbitmap(ICON_PATH)
     app.resizable(False, False)
 
     # Frame superior para botones info y configuración
