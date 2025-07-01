@@ -7,6 +7,7 @@ import os
 
 from app import ventanas_abiertas
 
+
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')

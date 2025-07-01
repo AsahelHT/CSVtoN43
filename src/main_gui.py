@@ -61,7 +61,6 @@ def iniciar_aplicacion():
     )
     btn_convertir.pack(pady=10)
 
-
     # Función que comprueba si hay ventanas abiertas y actualiza el estado del botón
     def hay_ventanas_abiertas(root):
         return any(isinstance(w, tk.Toplevel) and w.winfo_exists() for w in root.winfo_children())
@@ -82,6 +81,8 @@ def iniciar_aplicacion():
 
             if not hay_ventanas_abiertas(app):
                 btn_convertir.config(state="normal")
+            else:
+                btn_convertir.config(state="disabled")
 
         # Llama a sí misma cada 1000 ms (1 segundo)
         app.after(1000, comprobar_configuracion)
