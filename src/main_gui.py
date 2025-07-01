@@ -34,6 +34,7 @@ def iniciar_aplicacion():
     app = ttk.Window(title="CSVtoN43", themename="darkly")
     app.geometry("500x250")
     app.iconbitmap(obtener_ruta_icono())
+
     app.resizable(False, False)
 
     # Frame superior para botones info y configuración
