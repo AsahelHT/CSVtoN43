@@ -93,10 +93,7 @@ pip install -r requirements.txt
 Si quieres generar un ejecutable `.exe` para Windows:
 
 ```bash
-pyinstaller --noconfirm --onedir --windowed --icon=../media/csv2n43.ico --name=CSVtoN43 main_gui.py ^
-  --collect-all ttkbootstrap ^
-  --hidden-import=ttkbootstrap ^
-  --add-data "../media/csv2n43.ico;media"
+pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../media/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --add-data "../media/csv2n43.ico;media"
 
 ```
 

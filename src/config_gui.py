@@ -121,7 +121,6 @@ def configuracion_vacia(config):
 def solicitar_csv(state):
     respuesta = messagebox.askokcancel("Cargar plantilla CSV", "No se ha encontrado una configuración previa.\nSelecciona un archivo CSV para utilizar como plantilla.")
     if not respuesta:
-        state['window'].destroy()
         return False
     try:
         archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
@@ -138,11 +137,9 @@ def solicitar_csv(state):
             guardar_config(state['config'])
             return True
         else:
-            state['window'].destroy()
             return False
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo abrir el archivo CSV:\n{e}")
-        state['window'].destroy()
         return False
 
 def leer_columnas_csv(state):
