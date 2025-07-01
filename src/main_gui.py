@@ -1,5 +1,7 @@
 # main.py
 # build v2
+
+
 import ttkbootstrap as ttk
 import tkinter as tk
 from ttkbootstrap.constants import *
@@ -9,6 +11,9 @@ from preview_gui import mostrar_previsualizacion
 
 import os
 import sys
+
+os.environ["NUMPY_EXPERIMENTAL_ARRAY_FUNCTION"] = "0"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 from app import ventanas_abiertas
 

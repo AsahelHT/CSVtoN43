@@ -38,30 +38,14 @@ CSVtoN43/
 
 ```
 
----
-
-## 🖼️ Capturas de pantalla
-
-> *(Puedes insertar aquí imágenes explicativas de la interfaz, configuración y previsualización, por ejemplo:)*
-
-- Interfaz principal con carga de archivo  
-  ![pantalla principal](ruta/a/captura1.png)
-
-- Vista de configuración de campos  
-  ![configuración](ruta/a/captura2.png)
-
-- Ejemplo de previsualización con colores  
-  ![previsualización](ruta/a/captura3.png)
-
-- Resultado final en formato Norma 43  
-  ![norma43](ruta/a/captura4.png)
-
----
-
 ## 📖 Manual de usuario
 
 ### 1. Cargar un archivo CSV
-Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de movimientos bancarios.
+Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de movimientos bancarios. 
+Puede accerderse a la ventana de configuración mediante el botón **⚙️** y a la información de la app mediante el botón **ℹ️**.
+
+- Interfaz principal
+  ![pantalla principal](media/main_wd.png)
 
 ### 2. Configurar campos
 La primera vez, se abrirá automáticamente la **ventana de configuración**, donde deberás seleccionar un fichero CSV como plantilla.
@@ -71,11 +55,21 @@ De este fichero CSV se realizará automáticamente:
 
 💡 *Si el CSV incluye nombres estándar como `fecha`, `importe`, `concepto`, se asignarán automáticamente.*
 
+En esta ventana pueden 
+
+- Vista de configuración de campos  
+  ![configuración](media/cfg_wd.png)
+
+
 ### 3. Previsualizar conversión
 Antes de guardar, podrás ver una **previsualización** que:
 - Muestra las 7 primeras líneas del CSV original.
 - Presenta las 5 primeras y 2 últimas líneas del fichero generado en Norma 43.
 - Colorea los campos para facilitar la correspondencia entre ambos formatos.
+- Para convertir. Pulsa **“CONVERTIR”**.
+
+- Ejemplo de previsualización con colores  
+  ![previsualización](media/prev_wd.png)
 
 ### 4. Exportar a Norma 43
 Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El nombre se generará automáticamente y se te ofrecerá una ubicación para guardarlo.
