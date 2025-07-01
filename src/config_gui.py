@@ -8,13 +8,15 @@ import pandas as pd
 import json
 import csv
 
-import os
-import sys
 
-BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
+BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath((os.path.dirname(__file__))))
 
-CONFIG_FILE = os.path.join(BASE_DIR, 'config.json')
+def obtener_ruta_icono():
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
+
+CONFIG_FILE = os.path.join(BASE_DIR, 'CSVtoN43_CFG.json')
 
 def cargar_config():
     existe = os.path.exists(CONFIG_FILE)
@@ -62,7 +64,7 @@ SUGERENCIAS_COLUMNAS = {
 class ConfiguracionVentana(tk.Toplevel):
     def __init__(self, parent, config):
         super().__init__(parent)
-        self.iconbitmap(ICON_PATH)
+        self.iconbitmap(obtener_ruta_icono())
         self.configuracion = config
         self.df_columnas = []
 

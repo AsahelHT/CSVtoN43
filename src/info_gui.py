@@ -5,15 +5,14 @@ from ttkbootstrap.constants import *
 import sys
 import os
 
-import os
-import sys
-
-BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
+def obtener_ruta_icono():
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
 
 def mostrar_informacion():
     info_win = ttk.Toplevel()
-    info_win.iconbitmap(ICON_PATH)
+    info_win.iconbitmap(obtener_ruta_icono())
     info_win.title("Información de la aplicación")
     info_win.geometry("500x400")
     info_win.resizable(False, False)

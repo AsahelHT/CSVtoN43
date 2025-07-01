@@ -4,28 +4,28 @@ from ttkbootstrap.constants import *
 from config_gui import cargar_config, mostrar_configuracion
 from info_gui import mostrar_informacion
 from conversor import convertir_con_archivo
+from preview_gui import mostrar_previsualizacion
 
 import os
 import sys
 
-import os
-import sys
-
-BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-ICON_PATH = os.path.join(BASE_DIR, 'media', 'icon.ico')
+def obtener_ruta_icono():
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
 
 def iniciar_aplicacion():
     config, existe_config = cargar_config()
     app = ttk.Window(title="CSVtoN43", themename="darkly")
     app.geometry("500x250")
-    app.iconbitmap(ICON_PATH)
+    app.iconbitmap(obtener_ruta_icono())
     app.resizable(False, False)
 
     # Frame superior para botones info y configuración
     top_frame = ttk.Frame(app)
     top_frame.pack(anchor="ne", pady=10, padx=10)
 
-    btn_info = ttk.Button(top_frame, text="ℹ️", width=1, bootstyle="info-outline", command=mostrar_informacion)
+    btn_info = ttk.Button(top_frame, text="ℹ️", width=1, bootstyle="info-outline", command= mostrar_informacion)
     btn_info.pack(side="left", padx=5)
 
     btn_config = ttk.Button(top_frame, text="⚙️", width=3, bootstyle="light-outline", command=lambda: mostrar_configuracion(app, config))
@@ -37,10 +37,10 @@ def iniciar_aplicacion():
     # Botón principal grande
     btn_convertir = ttk.Button(
         app,
-        text="Convertir",
+        text="EMPEZAR",
         width=30,
         bootstyle="primary",
-        command=lambda: convertir_con_archivo(config)
+        command=lambda: mostrar_previsualizacion(config)
     )
     btn_convertir.pack(pady=10)
 

@@ -1,14 +1,16 @@
 {
     "sep": ";",
-    "campo_fecha": "Sin asignar",
-    "campo_valor": "Sin asignar",
-    "campo_concepto": "Sin asignar",
-    "campo_importe": "Sin asignar",
-    "campo_cuenta": "Sin asignar",
-    "campo_saldo": "Sin asignar",
-    "campo_ref1": "Sin asignar",
-    "campo_ref2": "Sin asignar",
+    "campo_fecha": "FECHA OPERACION",
+    "campo_valor": "FECHA VALOR",
+    "campo_concepto": "CONCEPTO",
+    "campo_importe": "IMPORTE",
+    "campo_cuenta": "CUENTA",
+    "campo_saldo": "SALDO",
+    "campo_ref1": "REFERENCIA 1",
+    "campo_ref2": "REFERENCIA 2",
     "nombre_empresa": "",
     "last_csv_path": "C:/Users/asahe/OneDrive/Escritorio/MICROPAP/PYTHON/docs",
-    "last_output_path": ""
+    "last_output_path": "",
+    "divisa_nombre": "Euro (EUR)",
+    "divisa_codigo": "978"
 }
