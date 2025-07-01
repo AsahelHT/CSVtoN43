@@ -5,3 +5,5 @@ ventanas_abiertas = {
     "info": None,
     "preview": None
 }
+
+

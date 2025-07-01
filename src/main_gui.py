@@ -54,7 +54,6 @@ def iniciar_aplicacion():
     )
     btn_convertir.pack(pady=10)
 
-    
 
     # Función que comprueba si hay ventanas abiertas y actualiza el estado del botón
     def hay_ventanas_abiertas(root):

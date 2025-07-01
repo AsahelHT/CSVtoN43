@@ -1,15 +1,40 @@
-import tkinter as tk
-from tkinter import Toplevel, filedialog, messagebox
-from ttkbootstrap import LabelFrame, Treeview, Scrollbar, Button
+from tkinter import ttk
+from tkinter import Toplevel, filedialog, messagebox, LEFT, BOTH, Frame
+from ttkbootstrap import LabelFrame, Treeview, Scrollbar, Button, Style
 import pandas as pd
 from conversor import generar_norma43_temp 
 from config_gui import cargar_config, mostrar_configuracion
 from conversor import convertir_con_archivo_existente
+from ttkbootstrap.widgets import Treeview
 import os
 import sys
 
 from app import ventanas_abiertas
 
+# Colores por campo
+colores = {
+    'campo_fecha': '#ff6b6b',     # rojo claro
+    'campo_valor': '#61dafb',     # azul claro
+    'campo_concepto': '#a3e635',  # verde lima
+    'campo_importe': '#facc15',   # amarillo dorado
+    'campo_saldo': '#d4d4d8',     # gris claro
+    'campo_ref1': '#c084fc',      # púrpura claro
+    'campo_ref2': '#f472b6'       # rosa pastel
+}
+
+def generar_mapa_columnas_desde_csv(columnas_csv, colores):
+    mapa_columnas = {}
+    for col in columnas_csv:
+        col_normalizada = col.strip().lower().replace(" ", "").replace("-", "").replace("_", "")
+        for clave_color in colores.keys():
+            if clave_color.startswith("campo_"):
+                campo = clave_color.replace("campo_", "")
+                if campo in col_normalizada:
+                    mapa_columnas[col] = clave_color
+                    break
+        else:
+            mapa_columnas[col] = None  # No se encontró mapeo
+    return mapa_columnas
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
@@ -53,8 +78,8 @@ def mostrar_previsualizacion(parent, config):
         if not preview_win.winfo_exists():
             return
         preview_win.title("🔍 Previsualización de la conversión")
-        preview_win.geometry("1000x800")
-        preview_win.minsize(1000, 800)
+        preview_win.geometry("1000x900")
+        preview_win.minsize(1000, 900)
         preview_win.iconbitmap(obtener_ruta_icono())
         preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy()))
         # Contenedor principal
@@ -62,7 +87,7 @@ def mostrar_previsualizacion(parent, config):
         
         ventanas_abiertas["preview"] = preview_win
         
-        container = tk.Frame(preview_win)
+        container = ttk.Frame(preview_win)
         container.pack(fill="both", expand=True, padx=10, pady=10)
 
         container.grid_rowconfigure(0, weight=1)  # Info
@@ -90,12 +115,12 @@ def mostrar_previsualizacion(parent, config):
         _mostrar_tabla_csv(frame_csv, archivo)
         
         # --- Indicador de conversión con emoji ---
-        arrow_frame = tk.Frame(container)
+        arrow_frame = ttk.Frame(container)
         arrow_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
         arrow_frame.grid_rowconfigure(0, weight=1)
         arrow_frame.grid_columnconfigure(0, weight=1)
 
-        emoji_label = tk.Label(
+        emoji_label = ttk.Label(
             arrow_frame,
             text="🔀",
             font=("Arial", 64),  # Tamaño grande
@@ -109,7 +134,7 @@ def mostrar_previsualizacion(parent, config):
         _mostrar_tabla_norma43(frame_n43, archivo, config,  parent=preview_win)
         
         # --- Boton de guardar ---
-        arrow_frame = tk.Frame(container)
+        arrow_frame = ttk.Frame(container)
         arrow_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=10)
         arrow_frame.grid_rowconfigure(0, weight=1)
         arrow_frame.grid_columnconfigure(0, weight=1)
@@ -123,94 +148,96 @@ def mostrar_previsualizacion(parent, config):
             command=lambda: on_convertir()
         )
         boton_guardar.grid(row=0, column=0, sticky="nsew")
-    except tk.TclError:
+    except ttk.TclError:
         return
     
+
+
 def _mostrar_tabla_csv(frame, archivo):
-    tree = Treeview(frame, show="headings")
-    tree.pack(fill="both", expand=True, side="left")
-
-    scrollbar = Scrollbar(frame, orient="vertical", command=tree.yview)
-    scrollbar.pack(side="right", fill="y")
-    tree.configure(yscrollcommand=scrollbar.set)
-
     try:
         df = pd.read_csv(archivo, sep=";", nrows=7)
-        tree["columns"] = list(df.columns)
-        for col in df.columns:
-            tree.heading(col, text=col)
-            tree.column(col, width=100, anchor="center")
-
-        for _, row in df.iterrows():
-            tree.insert("", "end", values=list(row))
     except Exception as e:
         messagebox.showerror("Error CSV", str(e))
+        return
 
-def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):  # Añadimos parent opcional
-    tree = Treeview(frame)
-    tree.pack(fill="both", expand=True, side="left")
+    columnas = list(df.columns)
+    mapa_columnas = generar_mapa_columnas_desde_csv(columnas, colores)
 
-    scrollbar = Scrollbar(frame, orient="vertical", command=tree.yview)
-    scrollbar.pack(side="right", fill="y")
-    tree.configure(yscrollcommand=scrollbar.set)
+    for i, col in enumerate(columnas):
+        subframe = Frame(frame)
+        subframe.pack(side=LEFT, fill=BOTH, expand=True)
+
+        clave_logica = mapa_columnas.get(col)
+        color = colores.get(clave_logica, "#e0e0e0")
+
+        style = Style()
+        style_name = f"Custom{i}.Treeview"
+        style.configure(f"{style_name}.Heading",
+                        background=color,
+                        foreground="black",
+                        font=("Segoe UI", 10, "bold"))
+        style.configure(style_name, rowheight=25)
+
+        tree = Treeview(subframe, columns=(col,), show="headings", style=style_name)
+        tree.pack(side=LEFT, fill=BOTH, expand=True)
+
+        tree.heading(col, text=col)
+        tree.column(col, width=120, anchor="center")
+
+        for valor in df[col]:
+            tree.insert("", "end", values=(valor,))
+
+from tkinter import Text, Scrollbar, messagebox
+from tkinter import RIGHT, LEFT, Y, BOTH
+from datetime import datetime
+from decimal import Decimal
+
+def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):
+    text = Text(
+        frame,
+        wrap="none",
+        font=("Courier", 10),
+        bg="#2c2f33",
+        fg="white",
+        insertbackground="white",
+        height=8  # Número de líneas visibles
+    )
+    text.pack(fill=BOTH, expand=True, side=LEFT)
+    
+   
+    # Colores legibles en tema oscuro
+
+    for campo, color in colores.items():
+        text.tag_config(campo, foreground=color)
 
     try:
-        lineas = generar_norma43_temp(archivo_csv, config)  # ← Esta puede lanzar error
-
+        lineas = generar_norma43_temp(archivo_csv, config)
         if not lineas:
             raise ValueError("No se generó contenido.")
 
         muestra = lineas[:5] + ["..."] + lineas[-2:]
 
-        tree["columns"] = ["contenido"]
-        tree.column("contenido", anchor="w", width=800)
+        for i, linea in enumerate(muestra):
+            linea = linea.strip()
+            pos_ini = f"{i + 1}.0"
+            text.insert("end", linea + "\n")
 
-        for linea in muestra:
-            tree.insert("", "end", values=[linea.strip()])
+            if linea.startswith("22"):
+                text.tag_add('campo_fecha',  f"{i+1}.8",  f"{i+1}.14")
+                text.tag_add('campo_valor',  f"{i+1}.14", f"{i+1}.20")
+                text.tag_add('campo_importe',f"{i+1}.31", f"{i+1}.45")
+                text.tag_add('campo_concepto',f"{i+1}.55", f"{i+1}.80")
 
+            elif linea.startswith("2301"):
+                text.tag_add('campo_ref1', f"{i+1}.4", f"{i+1}.64")
+
+            elif linea.startswith("2302"):
+                text.tag_add('campo_ref2', f"{i+1}.4", f"{i+1}.64")
+
+        text.config(state="disabled")
     except Exception as e:
         messagebox.showerror("Error Norma 43", str(e))
-
-        # Si hay ventana principal, abrir ventana de configuración
         if parent:
-            parent.destroy()  # Cierra la ventana de previsualización
-            parent.after(100, lambda: mostrar_configuracion(parent.master, config))  # Reabre la configuración desde la ventana principal
-
-
-
-        
-import tkinter as tk
-from ttkbootstrap import LabelFrame, Label
-
-def mostrar_leyenda_popup(parent=None):
-    leyenda_win = tk.Toplevel(parent)
-    leyenda_win.title("📘 Leyenda de correspondencia CSV → Norma43")
-    leyenda_win.geometry("600x400")
-    leyenda_win.resizable(True, True)
-
-    # Opcional: icono
-    try:
-        from preview_gui import obtener_ruta_icono
-        leyenda_win.iconbitmap(obtener_ruta_icono())
-    except:
-        pass
-
-    frame = LabelFrame(leyenda_win, text="Relación de campos", bootstyle="info")
-    frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-    campos = [
-        ("fecha", "Campo de fecha de operación del CSV → Línea 22 (posición 6-11)"),
-        ("valor", "Campo de fecha valor del CSV → Línea 22 (posición 12-17)"),
-        ("concepto", "Concepto del movimiento → Línea 22 (posición 40-99)"),
-        ("importe", "Importe del movimiento → Línea 22 (posición 33-44)"),
-        ("saldo", "Saldo inicial/final → Línea 11 y Línea 33"),
-        ("referencia 1", "Referencia extendida → Línea 2301"),
-        ("referencia 2", "Segunda referencia → Línea 2302"),
-        ("cuenta", "Número de cuenta del cliente → Línea 11 y Línea 33"),
-    ]
-
-    for campo, descripcion in campos:
-        Label(frame, text=f"{campo.title()}:", bootstyle="secondary", anchor="w").pack(fill="x", padx=5, pady=(8, 0))
-        Label(frame, text=descripcion, anchor="w", wraplength=550, justify="left").pack(fill="x", padx=10)
-
+            parent.destroy()
+            parent.after(100, lambda: mostrar_configuracion(parent.master, config))
 
