@@ -5,7 +5,7 @@
 ## 🧩 Funcionalidad principal
 
 - 🗃️ **Carga de archivos CSV** con información de movimientos bancarios.
-- ⚙️ **Configuración interactiva de columnas** para adaptar el CSV al formato esperado (asociar campos como fecha, importe, saldo, etc.).
+- ⚙️ **Configuración interactiva de columnas** para adaptar el CSV al formato esperado (asociar campos como fecha operacion operacion operacion, importe, saldo, etc.).
 - 💱 **Selección de divisa** con asignación automática del código ISO 4217.
 - 🧠 **Asignación automática de campos** al detectar nombres comunes como “fecha”, “importe”, “concepto”, etc.
 - 🔄 **Conversión a Norma 43 (AEB43)** siguiendo el estándar oficial.

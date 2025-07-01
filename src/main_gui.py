@@ -1,4 +1,5 @@
 # main.py
+# build v2
 import ttkbootstrap as ttk
 import tkinter as tk
 from ttkbootstrap.constants import *
@@ -18,7 +19,7 @@ def obtener_ruta_icono():
 
 def hay_campos_sin_asignar(config):
     for clave in config:
-        if clave.startswith("campo_") and clave not in ("campo_ref1", "campo_ref2"):
+        if clave.startswith("campo_") and clave not in ("referencia1", "referencia2"):
             if config[clave] == "Sin asignar":
                 return True
     return False

@@ -28,14 +28,14 @@ def cargar_config():
             return json.load(f), True
     return {
         'sep': ';',
-        'campo_fecha': 'Sin asignar',
-        'campo_valor': 'Sin asignar',
-        'campo_concepto': 'Sin asignar',
-        'campo_importe': 'Sin asignar',
-        'campo_cuenta': 'Sin asignar',
-        'campo_saldo': 'Sin asignar',
-        'campo_ref1': 'Sin asignar',
-        'campo_ref2': 'Sin asignar',
+        'fecha operacion': 'Sin asignar',
+        'fecha valor': 'Sin asignar',
+        'concepto': 'Sin asignar',
+        'importe': 'Sin asignar',
+        'cuenta': 'Sin asignar',
+        'saldo': 'Sin asignar',
+        'referencia1': 'Sin asignar',
+        'referencia2': 'Sin asignar',
         'nombre_empresa': '',
         'last_csv_path': '',
         'last_csv_file': '',
@@ -55,14 +55,14 @@ DIVISAS = {
 }
 
 SUGERENCIAS_COLUMNAS = {
-    'campo_fecha': ['fecha operación', 'fecha', 'fecha operacion'],
-    'campo_valor': ['fecha valor'],
-    'campo_concepto': ['concepto'],
-    'campo_importe': ['importe', 'cantidad'],
-    'campo_cuenta': ['cuenta', 'número cuenta'],
-    'campo_saldo': ['saldo'],
-    'campo_ref1': ['referencia 1', 'ref1'],
-    'campo_ref2': ['referencia 2', 'ref2']
+    'fecha operacion': ['fecha operación', 'operacion', 'fecha operacion'],
+    'fecha valor': ['fecha valor', 'valor'],
+    'concepto': ['concepto'],
+    'importe': ['importe', 'cantidad'],
+    'cuenta': ['cuenta', 'número cuenta'],
+    'saldo': ['saldo'],
+    'referencia1': ['referencia 1', 'ref1'],
+    'referencia2': ['referencia 2', 'ref2']
 }
 
 def mostrar_configuracion(parent, config) :
@@ -227,7 +227,7 @@ def crear_campos(state):
                     combo_ref.configure(style="Warning.TCombobox")
 
                 # Verificar si todos están asignados
-                if all(vars_[k].get() != "Sin asignar" for k in SUGERENCIAS_COLUMNAS if k not in ("campo_ref1", "campo_ref2")):
+                if all(vars_[k].get() != "Sin asignar" for k in SUGERENCIAS_COLUMNAS if k not in ("referencia1", "referencia2")):
                     if state.get("advertencia_label"):
                         state["advertencia_label"].destroy()
                         state["advertencia_label"] = None
@@ -304,7 +304,7 @@ def guardar_configuracion(state):
 
     # Detectar campos obligatorios sin asignar
     for campo in SUGERENCIAS_COLUMNAS:
-        if campo in ('campo_ref1', 'campo_ref2'):
+        if campo in ('referencia1', 'referencia2'):
             continue  # No obligatorios
         if config.get(campo) == "Sin asignar":
             campos_sin_asignar.append(campo)

@@ -28,12 +28,17 @@ def convertir_con_archivo_existente(config, csv_file):
 
             for row in reader:
                 # Leer cuenta
-                if 'campo_cuenta' in config and config['campo_cuenta'] in row:
-                    cuenta_raw = row[config['campo_cuenta']]
-                    cuenta = cuenta_raw.replace(' ', '').zfill(20)
+                if config.get('cuenta') in row:
+                    cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
+                    if cuenta_csv_raw.upper().startswith("ES"):
+                        cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
+                    cuenta_csv = cuenta_csv_raw.zfill(20)
+                    entidad = cuenta_csv[:6]
+                    oficina = cuenta_csv[6:10]
+                    cuenta = cuenta_csv[10:]
 
                 # Leer fecha
-                fecha_str = row.get(config['campo_fecha'], '')
+                fecha_str = row.get(config['fecha operacion'], '')
                 try:
                     fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
                     movimientos.append(fecha)
@@ -63,59 +68,6 @@ def convertir_con_archivo_existente(config, csv_file):
 
     generar_norma43_estandar_80(csv_file, output_file, config)
     messagebox.showinfo("Conversión completada", f"Archivo guardado en:\n{output_file}")
-
-def convertir_con_archivo(config):
-    csv_file = filedialog.askopenfilename(title="Selecciona archivo CSV", filetypes=[("CSV", "*.csv")])
-    if not csv_file:
-        return
-
-    cuenta = "00000000000000000000"
-    fecha_final = datetime.now()
-
-    try:
-        with open(csv_file, newline='', encoding='utf-8') as f:
-            reader = csv.DictReader(f, delimiter=config['sep'])
-            reader.fieldnames = [h.strip() for h in reader.fieldnames]
-            movimientos = []
-
-            for row in reader:
-                # Leer cuenta
-                if 'campo_cuenta' in config and config['campo_cuenta'] in row:
-                    cuenta_raw = row[config['campo_cuenta']]
-                    cuenta = cuenta_raw.replace(' ', '').zfill(20)
-
-                # Leer fecha
-                fecha_str = row.get(config['campo_fecha'], '')
-                try:
-                    fecha = datetime.strptime(fecha_str, "%d/%m/%Y")
-                    movimientos.append(fecha)
-                except:
-                    continue
-
-            if movimientos:
-                fecha_final = max(movimientos)
-    except Exception as e:
-        messagebox.showerror("Error leyendo CSV", f"No se pudo analizar el archivo CSV:\n{e}")
-        return
-
-    nombre_sugerido = f"AEB43_{cuenta}_{fecha_final.strftime('%Y-%m')}"
-
-    output_file = filedialog.asksaveasfilename(
-        title="Guardar como Norma43",
-        defaultextension=".txt",
-        filetypes=[("TXT", "*.txt")],
-        initialfile=nombre_sugerido
-    )
-    if not output_file:
-        return
-
-    config['last_csv_path'] = os.path.dirname(csv_file)
-    config['last_output_path'] = os.path.dirname(output_file)
-    guardar_config(config)
-
-    generar_norma43_estandar_80(csv_file, output_file, config)
-    messagebox.showinfo("Conversión completada", f"Archivo guardado en:\n{output_file}")
-
 
 def generar_norma43_estandar_80(csv_file, output_file, config):
 
@@ -130,37 +82,40 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
         reader.fieldnames = [h.strip() for h in reader.fieldnames]
 
         for row in reader:
-            if 'campo_cuenta' in config and config['campo_cuenta'] in row:
-                cuenta_csv = row[config['campo_cuenta']].replace(' ', '').zfill(20)
-                entidad = cuenta_csv[:4]
-                oficina = cuenta_csv[4:8]
-                cuenta = cuenta_csv[8:]
+            if config.get('cuenta') in row:
+                cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
+                if cuenta_csv_raw.upper().startswith("ES"):
+                    cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
+                cuenta_csv = cuenta_csv_raw.zfill(20)
+                entidad = cuenta_csv[:6]
+                oficina = cuenta_csv[6:10]
+                cuenta = cuenta_csv[10:]
 
-            fecha_raw = row[config['campo_fecha']]
-            valor_raw = row[config['campo_valor']]
-            concepto = row[config['campo_concepto']]
-            ref1 = row.get(config['campo_ref1'], '') if config['campo_ref1'] != "Sin asignar" else ''
-            ref2 = row.get(config['campo_ref2'], '') if config['campo_ref2'] != "Sin asignar" else ''
-            importe_str = row[config['campo_importe']].replace(',', '.')
-            saldo_str = row[config['campo_saldo']].replace(',', '.')
+            fecha_raw = row[config['fecha operacion']]
+            fecha_valor_raw = row[config['fecha valor']]
+            concepto = row[config['concepto']]
+            ref1 = row.get(config['referencia1'], '') if config['referencia1'] != "Sin asignar" else ''
+            ref2 = row.get(config['referencia2'], '') if config['referencia2'] != "Sin asignar" else ''
+            importe_str = row[config['importe']].replace(',', '.')
+            saldo_str = row[config['saldo']].replace(',', '.')
 
             try:
                 fecha = datetime.strptime(fecha_raw, "%d/%m/%Y")
-                valor = datetime.strptime(valor_raw, "%d/%m/%Y")
+                fecha_valor = datetime.strptime(fecha_valor_raw, "%d/%m/%Y")
                 importe = Decimal(importe_str)
                 saldo = Decimal(saldo_str)
             except:
                 continue
 
             movimientos.append({
-                'fecha': fecha,
-                'valor': valor,
+                'fecha operacion': fecha,
+                'fecha valor': fecha_valor,
                 'concepto': concepto,
                 'importe': importe,
                 'saldo': saldo
             })
 
-    movimientos.sort(key=lambda m: m['fecha'])
+    movimientos.sort(key=lambda m: m['fecha operacion'])
 
     if not movimientos:
         raise Exception("No se encontraron movimientos válidos.")
@@ -182,8 +137,8 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
     nabonos = 0
     ncargos = 0
 
-    fecha_inicio = movimientos[0]['fecha'].strftime("%y%m%d")
-    fecha_fin = movimientos[-1]['fecha'].strftime("%y%m%d")
+    fecha_inicio = movimientos[0]['fecha operacion'].strftime("%y%m%d")
+    fecha_fin = movimientos[-1]['fecha operacion'].strftime("%y%m%d")
 
     with open(output_file, 'w', encoding='utf-8') as f:
         linea_11 = f"11{entidad}{oficina}{cuenta}{fecha_inicio}{fecha_fin}{saldo_tipo}{importe_saldo}{divisa}{modalidad}{formatea_texto(config['nombre_empresa'], 36)}"
@@ -191,8 +146,8 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
         num_registros = 1
 
         for mov in movimientos:
-            fecha = mov['fecha'].strftime("%y%m%d")
-            valor = mov['valor'].strftime("%y%m%d")
+            fecha = mov['fecha operacion'].strftime("%y%m%d")
+            fecha_valor = mov['fecha valor'].strftime("%y%m%d")
             importe = mov['importe']
             concepto = mov['concepto']
 
@@ -206,7 +161,7 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
                 cargos += abs(importe)
                 ncargos += 1
 
-            linea_22 = f"22    {oficina}{fecha}{valor}{concepto_comun}{concepto_propio}{importe_tipo}{normaliza_importe(abs(importe))}{n_documento}{formatea_texto(concepto, 60)}"
+            linea_22 = f"22    {oficina}{fecha}{fecha_valor}{concepto_comun}{concepto_propio}{importe_tipo}{normaliza_importe(abs(importe))}{n_documento}{formatea_texto(concepto, 60)}"
             f.write(linea_22[:80] + "\n")
             num_registros += 1
 
@@ -244,17 +199,17 @@ def generar_norma43_temp(csv_file, config):
 
         # Comprobar que todos los campos necesarios existen en el CSV
         campos_necesarios = [
-            config.get('campo_fecha'),
-            config.get('campo_valor'),
-            config.get('campo_concepto'),
-            config.get('campo_importe'),
-            config.get('campo_saldo'),
-            config.get('campo_cuenta'),
+            config.get('fecha operacion'),
+            config.get('fecha valor'),
+            config.get('concepto'),
+            config.get('importe'),
+            config.get('saldo'),
+            config.get('cuenta'),
         ]
 
         # Solo añadir ref1/ref2 si están asignados
-        ref1 = config.get('campo_ref1')
-        ref2 = config.get('campo_ref2')
+        ref1 = config.get('referencia1')
+        ref2 = config.get('referencia2')
         if ref1 and ref1 != "Sin asignar":
             campos_necesarios.append(ref1)
         if ref2 and ref2 != "Sin asignar":
@@ -265,31 +220,33 @@ def generar_norma43_temp(csv_file, config):
             raise Exception(f"Faltan los siguientes campos en el CSV:\n{', '.join(campos_faltantes)}")
 
         for row in reader:
-            if config.get('campo_cuenta') in row:
-                cuenta_csv = row[config['campo_cuenta']].replace(' ', '').zfill(20)
-                entidad = cuenta_csv[:4]
-                oficina = cuenta_csv[4:8]
-                cuenta = cuenta_csv[8:]
-
+            if config.get('cuenta') in row:
+                cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
+                if cuenta_csv_raw.upper().startswith("ES"):
+                    cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
+                cuenta_csv = cuenta_csv_raw.zfill(20)
+                entidad = cuenta_csv[:6]
+                oficina = cuenta_csv[6:10]
+                cuenta = cuenta_csv[10:]
             try:
-                fecha_raw = row[config['campo_fecha']]
-                valor_raw = row[config['campo_valor']]
-                concepto = row[config['campo_concepto']]
-                ref1 = row.get(config['campo_ref1'], '') if config['campo_ref1'] != "Sin asignar" else ''
-                ref2 = row.get(config['campo_ref2'], '') if config['campo_ref2'] != "Sin asignar" else ''
-                importe_str = row[config['campo_importe']].replace(',', '.')
-                saldo_str = row[config['campo_saldo']].replace(',', '.')
+                fecha_raw = row[config['fecha operacion']]
+                fecha_valor_raw = row[config['fecha valor']]
+                concepto = row[config['concepto']]
+                ref1 = row.get(config['referencia1'], '') if config['referencia1'] != "Sin asignar" else ''
+                ref2 = row.get(config['referencia2'], '') if config['referencia2'] != "Sin asignar" else ''
+                importe_str = row[config['importe']].replace(',', '.')
+                saldo_str = row[config['saldo']].replace(',', '.')
 
                 fecha = datetime.strptime(fecha_raw, "%d/%m/%Y")
-                valor = datetime.strptime(valor_raw, "%d/%m/%Y")
+                fecha_valor = datetime.strptime(fecha_valor_raw, "%d/%m/%Y")
                 importe = Decimal(importe_str)
                 saldo = Decimal(saldo_str)
             except:
                 continue
 
             movimientos.append({
-                'fecha': fecha,
-                'valor': valor,
+                'fecha operacion': fecha,
+                'fecha valor': fecha_valor,
                 'concepto': concepto,
                 'ref1': ref1,
                 'ref2': ref2,
@@ -308,7 +265,7 @@ def generar_norma43_temp(csv_file, config):
     divisa = config.get('divisa_codigo', '978')
 
     modalidad = '3'
-    concepto_comun = ''
+    concepto_comun = '99'
     concepto_propio = '000'
     n_documento = '0000000000'
 
@@ -317,8 +274,8 @@ def generar_norma43_temp(csv_file, config):
     nabonos = 0
     ncargos = 0
 
-    fecha_inicio = movimientos[0]['fecha'].strftime("%y%m%d")
-    fecha_fin = movimientos[-1]['fecha'].strftime("%y%m%d")
+    fecha_inicio = movimientos[0]['fecha operacion'].strftime("%y%m%d")
+    fecha_fin = movimientos[-1]['fecha operacion'].strftime("%y%m%d")
 
     lineas = []
 
@@ -327,8 +284,8 @@ def generar_norma43_temp(csv_file, config):
     lineas.append(linea_11[:80])
 
     for mov in movimientos:
-        fecha = mov['fecha'].strftime("%y%m%d")
-        valor = mov['valor'].strftime("%y%m%d")
+        fecha = mov['fecha operacion'].strftime("%y%m%d")
+        fecha_valor = mov['fecha valor'].strftime("%y%m%d")
         importe = mov['importe']
         concepto = mov['concepto']
         ref1 = mov['ref1']
@@ -343,7 +300,7 @@ def generar_norma43_temp(csv_file, config):
             cargos += abs(importe)
             ncargos += 1
 
-        linea_22 = f"22    {oficina}{fecha}{valor}{concepto_comun}{concepto_propio}{importe_tipo}{normaliza_importe(abs(importe))}{n_documento}{formatea_texto(concepto, 60)}"
+        linea_22 = f"22    {oficina}{fecha}{fecha_valor}{concepto_comun}{concepto_propio}{importe_tipo}{normaliza_importe(abs(importe))}{n_documento}{formatea_texto(concepto, 60)}"
         lineas.append(linea_22[:80])
 
         lineas.append(f"2301{formatea_texto(ref1 or concepto, 60)}"[:80])

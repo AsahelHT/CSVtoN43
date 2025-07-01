@@ -49,6 +49,8 @@ def mostrar_informacion():
     texto_autor = (
         "Autor: Asahel Hernández Torné\n"
         "Contacto: asahel.dev@gmail.com\n"
+        "\n"
+        "Versión: Build v2.0-010725\n"
         "Licencia: GPL-3.0 license\n"
     )
 
