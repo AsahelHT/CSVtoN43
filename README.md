@@ -8,9 +8,9 @@
 - ⚙️ **Configuración interactiva de columnas** para adaptar el CSV al formato esperado (asociar campos como fecha, importe, saldo, etc.).
 - 💱 **Selección de divisa** con asignación automática del código ISO 4217.
 - 🧠 **Asignación automática de campos** al detectar nombres comunes como “fecha”, “importe”, “concepto”, etc.
-- 🔄 **Conversión a Norma 43 (AEB43)** siguiendo el estándar oficial, con líneas 11, 22, 23, 33 y 88.
+- 🔄 **Conversión a Norma 43 (AEB43)** siguiendo el estándar oficial.
 - 📤 **Generación automática de nombre de archivo** al exportar.
-- 🔁 **Conversión inversa** de archivos `.txt` Norma 43 a `.csv`.
+- WIP 🔁 **Conversión inversa** de archivos `.txt` Norma 43 a `.csv`.
 
 ---
 

@@ -139,8 +139,8 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
             fecha_raw = row[config['campo_fecha']]
             valor_raw = row[config['campo_valor']]
             concepto = row[config['campo_concepto']]
-            ref1 = row[config['campo_ref1']]
-            ref2 = row[config['campo_ref2']]
+            ref1 = row.get(config['campo_ref1'], '') if config['campo_ref1'] != "Sin asignar" else ''
+            ref2 = row.get(config['campo_ref2'], '') if config['campo_ref2'] != "Sin asignar" else ''
             importe_str = row[config['campo_importe']].replace(',', '.')
             saldo_str = row[config['campo_saldo']].replace(',', '.')
 
@@ -242,8 +242,30 @@ def generar_norma43_temp(csv_file, config):
         reader = csv.DictReader(f, delimiter=config['sep'])
         reader.fieldnames = [h.strip() for h in reader.fieldnames]
 
+        # Comprobar que todos los campos necesarios existen en el CSV
+        campos_necesarios = [
+            config.get('campo_fecha'),
+            config.get('campo_valor'),
+            config.get('campo_concepto'),
+            config.get('campo_importe'),
+            config.get('campo_saldo'),
+            config.get('campo_cuenta'),
+        ]
+
+        # Solo añadir ref1/ref2 si están asignados
+        ref1 = config.get('campo_ref1')
+        ref2 = config.get('campo_ref2')
+        if ref1 and ref1 != "Sin asignar":
+            campos_necesarios.append(ref1)
+        if ref2 and ref2 != "Sin asignar":
+            campos_necesarios.append(ref2)
+
+        campos_faltantes = [campo for campo in campos_necesarios if campo not in reader.fieldnames]
+        if campos_faltantes:
+            raise Exception(f"Faltan los siguientes campos en el CSV:\n{', '.join(campos_faltantes)}")
+
         for row in reader:
-            if 'campo_cuenta' in config and config['campo_cuenta'] in row:
+            if config.get('campo_cuenta') in row:
                 cuenta_csv = row[config['campo_cuenta']].replace(' ', '').zfill(20)
                 entidad = cuenta_csv[:4]
                 oficina = cuenta_csv[4:8]
@@ -253,8 +275,8 @@ def generar_norma43_temp(csv_file, config):
                 fecha_raw = row[config['campo_fecha']]
                 valor_raw = row[config['campo_valor']]
                 concepto = row[config['campo_concepto']]
-                ref1 = row[config['campo_ref1']]
-                ref2 = row[config['campo_ref2']]
+                ref1 = row.get(config['campo_ref1'], '') if config['campo_ref1'] != "Sin asignar" else ''
+                ref2 = row.get(config['campo_ref2'], '') if config['campo_ref2'] != "Sin asignar" else ''
                 importe_str = row[config['campo_importe']].replace(',', '.')
                 saldo_str = row[config['campo_saldo']].replace(',', '.')
 
@@ -275,10 +297,8 @@ def generar_norma43_temp(csv_file, config):
                 'saldo': saldo
             })
 
-    movimientos.sort(key=lambda m: m['fecha'])
-
     if not movimientos:
-        raise Exception("No se encontraron movimientos válidos.")
+        raise Exception("No se encontraron movimientos válidos en el archivo CSV.")
 
     primer_mov = movimientos[0]
     saldo_inicial = primer_mov['saldo'] - primer_mov['importe']

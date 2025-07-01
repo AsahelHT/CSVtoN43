@@ -8,108 +8,124 @@ from conversor import convertir_con_archivo_existente
 import os
 import sys
 
+from app import ventanas_abiertas
 
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
+        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
 
-def mostrar_previsualizacion(parent, config, boton_inicio):
-    boton_inicio.config(state="disabled")
-    config, existe_config = cargar_config()
+def mostrar_previsualizacion(parent, config):
+
+    try:
+        # Evitar duplicados
+        if ventanas_abiertas.get("preview") and ventanas_abiertas["preview"].winfo_exists():
+            ventanas_abiertas["preview"].focus()
+            return
+        
+        #boton_inicio.config(state="disabled")
+        config, existe_config = cargar_config()
+
+        if not existe_config:
+            ok = mostrar_configuracion(parent, config)
+            if not ok:
+                return
+
+        def on_convertir():
+            convertir_con_archivo_existente(config, archivo)
+            preview_win.destroy()
 
 
-    if not existe_config:
-        ok = mostrar_configuracion(parent, config)
-        if not ok:
-            boton_inicio.config(state="normal")
+        archivo = filedialog.askopenfilename(
+            title="Seleccionar archivo CSV",
+            filetypes=[("CSV files", "*.csv")]
+        )
+
+        if not archivo:
             return
 
-    
+        # Verifica si el contenedor principal sigue existiendo
+        if not parent.winfo_exists():
+            return
+        
+        preview_win = Toplevel()
+        if not preview_win.winfo_exists():
+            return
+        preview_win.title("🔍 Previsualización de la conversión")
+        preview_win.geometry("1000x800")
+        preview_win.minsize(1000, 800)
+        preview_win.iconbitmap(obtener_ruta_icono())
+        preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy()))
+        # Contenedor principal
 
-    def on_convertir():
-        convertir_con_archivo_existente(config, archivo)
-        preview_win.destroy()
-        boton_inicio.config(state="normal")
+        
+        ventanas_abiertas["preview"] = preview_win
+        
+        container = tk.Frame(preview_win)
+        container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        container.grid_rowconfigure(0, weight=1)  # Info
+        container.grid_rowconfigure(1, weight=3)  # CSV
+        container.grid_rowconfigure(2, weight=1)  # Campo de texto
+        container.grid_rowconfigure(3, weight=3)  # Norma43
+        container.grid_rowconfigure(4, weight=3)  # Guardar
+        container.grid_columnconfigure(0, weight=1)
+
+        # --- Boton info ---
+        
+        #btn_leyenda = Button(
+        #    container,
+        #    text="📘 Ver leyenda",
+        #    bootstyle="info-outline",
+        #    command=lambda: mostrar_leyenda_popup(preview_win)
+        #)
+        #btn_leyenda.grid(row=0, column=0, columnspan=2, pady=(5, 10))
 
 
-    archivo = filedialog.askopenfilename(
-        title="Seleccionar archivo CSV",
-        filetypes=[("CSV files", "*.csv")]
-    )
+        # --- Previsualización CSV ---
+        frame_csv = LabelFrame(container, text="📄 Previsualización CSV Original (7 primeras líneas)", bootstyle="primary")
+        frame_csv.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
+        
+        _mostrar_tabla_csv(frame_csv, archivo)
+        
+        # --- Indicador de conversión con emoji ---
+        arrow_frame = tk.Frame(container)
+        arrow_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
+        arrow_frame.grid_rowconfigure(0, weight=1)
+        arrow_frame.grid_columnconfigure(0, weight=1)
 
-    if not archivo:
-        boton_inicio.config(state="normal")
+        emoji_label = tk.Label(
+            arrow_frame,
+            text="🔀",
+            font=("Arial", 64),  # Tamaño grande
+            anchor="center"
+        )
+        emoji_label.grid(row=0, column=0, sticky="nsew")        
+        # --- Previsualización Norma43 ---
+        frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="light")
+        frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
+        
+        _mostrar_tabla_norma43(frame_n43, archivo, config,  parent=preview_win)
+        
+        # --- Boton de guardar ---
+        arrow_frame = tk.Frame(container)
+        arrow_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=10)
+        arrow_frame.grid_rowconfigure(0, weight=1)
+        arrow_frame.grid_columnconfigure(0, weight=1)
+
+        boton_guardar = Button(
+            arrow_frame,
+            text="CONVERTIR",
+            bootstyle="success",
+            width=5,
+            style="TButton",
+            command=lambda: on_convertir()
+        )
+        boton_guardar.grid(row=0, column=0, sticky="nsew")
+    except tk.TclError:
         return
-
-    preview_win = Toplevel()
-    preview_win.title("🔍 Previsualización de la conversión")
-    preview_win.geometry("1000x800")
-    preview_win.iconbitmap(obtener_ruta_icono())
-    preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy(), boton_inicio.config(state="normal")))
-    # Contenedor principal
     
-    container = tk.Frame(preview_win)
-    container.pack(fill="both", expand=True, padx=10, pady=10)
-
-    container.grid_rowconfigure(0, weight=1)  # Info
-    container.grid_rowconfigure(1, weight=3)  # CSV
-    container.grid_rowconfigure(2, weight=1)  # Campo de texto
-    container.grid_rowconfigure(3, weight=3)  # Norma43
-    container.grid_rowconfigure(4, weight=3)  # Guardar
-    container.grid_columnconfigure(0, weight=1)
-
-    # --- Boton info ---
-    
-    #btn_leyenda = Button(
-    #    container,
-    #    text="📘 Ver leyenda",
-    #    bootstyle="info-outline",
-    #    command=lambda: mostrar_leyenda_popup(preview_win)
-    #)
-    #btn_leyenda.grid(row=0, column=0, columnspan=2, pady=(5, 10))
-
-
-    # --- Previsualización CSV ---
-    frame_csv = LabelFrame(container, text="📄 Previsualización CSV Original (7 primeras líneas)", bootstyle="primary")
-    frame_csv.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
-    _mostrar_tabla_csv(frame_csv, archivo)
-
-    # --- Indicador de conversión con emoji ---
-    arrow_frame = tk.Frame(container)
-    arrow_frame.grid(row=2, column=0, sticky="nsew", padx=5, pady=5)
-    arrow_frame.grid_rowconfigure(0, weight=1)
-    arrow_frame.grid_columnconfigure(0, weight=1)
-
-    emoji_label = tk.Label(
-        arrow_frame,
-        text="🔀",
-        font=("Arial", 64),  # Tamaño grande
-        anchor="center"
-    )
-    emoji_label.grid(row=0, column=0, sticky="nsew")        
-    # --- Previsualización Norma43 ---
-    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="light")
-    frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
-    _mostrar_tabla_norma43(frame_n43, archivo, config)
-
-    # --- Boton de guardar ---
-    arrow_frame = tk.Frame(container)
-    arrow_frame.grid(row=4, column=0, columnspan=2, sticky="nsew", pady=10)
-    arrow_frame.grid_rowconfigure(0, weight=1)
-    arrow_frame.grid_columnconfigure(0, weight=1)
-
-    boton_guardar = Button(
-        arrow_frame,
-        text="CONVERTIR",
-        bootstyle="success",
-        width=5,
-        style="TButton",
-        command=lambda: on_convertir()
-    )
-    boton_guardar.grid(row=0, column=0, sticky="nsew")
-
 def _mostrar_tabla_csv(frame, archivo):
     tree = Treeview(frame, show="headings")
     tree.pack(fill="both", expand=True, side="left")
@@ -130,7 +146,7 @@ def _mostrar_tabla_csv(frame, archivo):
     except Exception as e:
         messagebox.showerror("Error CSV", str(e))
 
-def _mostrar_tabla_norma43(frame, archivo_csv, config):
+def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):  # Añadimos parent opcional
     tree = Treeview(frame)
     tree.pack(fill="both", expand=True, side="left")
 
@@ -139,7 +155,8 @@ def _mostrar_tabla_norma43(frame, archivo_csv, config):
     tree.configure(yscrollcommand=scrollbar.set)
 
     try:
-        lineas = generar_norma43_temp(archivo_csv, config)  # Debes retornar una lista de líneas
+        lineas = generar_norma43_temp(archivo_csv, config)  # ← Esta puede lanzar error
+
         if not lineas:
             raise ValueError("No se generó contenido.")
 
@@ -154,6 +171,14 @@ def _mostrar_tabla_norma43(frame, archivo_csv, config):
     except Exception as e:
         messagebox.showerror("Error Norma 43", str(e))
 
+        # Si hay ventana principal, abrir ventana de configuración
+        if parent:
+            parent.destroy()  # Cierra la ventana de previsualización
+            parent.after(100, lambda: mostrar_configuracion(parent.master, config))  # Reabre la configuración desde la ventana principal
+
+
+
+        
 import tkinter as tk
 from ttkbootstrap import LabelFrame, Label
 

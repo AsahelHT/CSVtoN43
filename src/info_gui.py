@@ -5,17 +5,27 @@ from ttkbootstrap.constants import *
 import sys
 import os
 
+from app import ventanas_abiertas
+
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
+        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
 
 def mostrar_informacion():
+
+    # Evitar duplicados
+    if ventanas_abiertas.get("info") and ventanas_abiertas["info"].winfo_exists():
+        ventanas_abiertas["info"].focus()
+        return
+
     info_win = ttk.Toplevel()
     info_win.iconbitmap(obtener_ruta_icono())
     info_win.title("Información de la aplicación")
     info_win.geometry("500x400")
     info_win.resizable(False, False)
+
+    ventanas_abiertas["info"] = info_win
 
     texto_intro = (
         "CSVtoN43 es una herramienta para convertir extractos bancarios en formato CSV a archivos compatibles con la Norma 43 del estándar bancario español.\n"
