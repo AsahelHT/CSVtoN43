@@ -17,7 +17,7 @@ def convertir_con_archivo_existente(config, csv_file):
         messagebox.showerror("Archivo no encontrado", f"No se encontró el archivo:\n{csv_file}")
         return
 
-    cuenta = "00000000000000000000"
+    cuenta_csv = "00000000000000000000"
     fecha_final = datetime.now()
 
     try:
@@ -29,13 +29,20 @@ def convertir_con_archivo_existente(config, csv_file):
             for row in reader:
                 # Leer cuenta
                 if config.get('cuenta') in row:
-                    cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
-                    if cuenta_csv_raw.upper().startswith("ES"):
-                        cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
-                    cuenta_csv = cuenta_csv_raw.zfill(20)
-                    entidad = cuenta_csv[:6]
-                    oficina = cuenta_csv[6:10]
-                    cuenta = cuenta_csv[10:]
+                    cuenta_csv_raw = row[config['cuenta']].replace(' ', '').upper()
+
+                    if cuenta_csv_raw[:2].isalpha():  # Detecta si es IBAN
+                        # Quitar los 4 primeros caracteres (p.ej. ES12) => código país + dígito de control
+                        cuenta_csv = cuenta_csv_raw[4:]
+                        entidad = cuenta_csv[:4]
+                        oficina = cuenta_csv[4:8]
+                        cuenta = cuenta_csv[8:]
+                    else:
+                        # Cuenta nacional (CCC)
+                        cuenta_csv = cuenta_csv_raw
+                        entidad = cuenta_csv_raw[:4]
+                        oficina = cuenta_csv_raw[4:8]
+                        cuenta = cuenta_csv_raw[8:]
 
                 # Leer fecha
                 fecha_str = row.get(config['fecha operacion'], '')
@@ -51,7 +58,7 @@ def convertir_con_archivo_existente(config, csv_file):
         messagebox.showerror("Error leyendo CSV", f"No se pudo analizar el archivo CSV:\n{e}")
         return
 
-    nombre_sugerido = f"AEB43_{cuenta}_{fecha_final.strftime('%Y-%m')}"
+    nombre_sugerido = f"AEB43_{cuenta_csv}_{fecha_final.strftime('%Y-%m')}"
 
     output_file = filedialog.asksaveasfilename(
         title="Guardar como Norma43",
@@ -83,19 +90,26 @@ def generar_norma43_estandar_80(csv_file, output_file, config):
 
         for row in reader:
             if config.get('cuenta') in row:
-                cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
-                if cuenta_csv_raw.upper().startswith("ES"):
-                    cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
-                cuenta_csv = cuenta_csv_raw.zfill(20)
-                entidad = cuenta_csv[:6]
-                oficina = cuenta_csv[6:10]
-                cuenta = cuenta_csv[10:]
+                cuenta_csv_raw = row[config['cuenta']].replace(' ', '').upper()
+
+                if cuenta_csv_raw[:2].isalpha():  # Detecta si es IBAN
+                    # Quitar los 4 primeros caracteres (p.ej. ES12) => código país + dígito de control
+                    cuenta_csv = cuenta_csv_raw[4:]
+                    entidad = cuenta_csv[:4]
+                    oficina = cuenta_csv[4:8]
+                    cuenta = cuenta_csv[8:]
+                else:
+                    # Cuenta nacional (CCC)
+                    entidad = cuenta_csv_raw[:4]
+                    oficina = cuenta_csv_raw[4:8]
+                    cuenta = cuenta_csv_raw[8:]
+
 
             fecha_raw = row[config['fecha operacion']]
             fecha_valor_raw = row[config['fecha valor']]
             concepto = row[config['concepto']]
-            ref1 = row.get(config['referencia1'], '') if config['referencia1'] != "Sin asignar" else ''
-            ref2 = row.get(config['referencia2'], '') if config['referencia2'] != "Sin asignar" else ''
+            ref1 = row.get(config['referencia 1'], '') if config['referencia 1'] != "Sin asignar" else ''
+            ref2 = row.get(config['referencia 2'], '') if config['referencia 2'] != "Sin asignar" else ''
             importe_str = row[config['importe']].replace(',', '.')
             saldo_str = row[config['saldo']].replace(',', '.')
 
@@ -208,8 +222,8 @@ def generar_norma43_temp(csv_file, config):
         ]
 
         # Solo añadir ref1/ref2 si están asignados
-        ref1 = config.get('referencia1')
-        ref2 = config.get('referencia2')
+        ref1 = config.get('referencia 1')
+        ref2 = config.get('referencia 2')
         if ref1 and ref1 != "Sin asignar":
             campos_necesarios.append(ref1)
         if ref2 and ref2 != "Sin asignar":
@@ -221,19 +235,26 @@ def generar_norma43_temp(csv_file, config):
 
         for row in reader:
             if config.get('cuenta') in row:
-                cuenta_csv_raw = row[config['cuenta']].replace(' ', '')
-                if cuenta_csv_raw.upper().startswith("ES"):
-                    cuenta_csv_raw = cuenta_csv_raw[4:]  # quitar ES si existe
-                cuenta_csv = cuenta_csv_raw.zfill(20)
-                entidad = cuenta_csv[:6]
-                oficina = cuenta_csv[6:10]
-                cuenta = cuenta_csv[10:]
+                cuenta_csv_raw = row[config['cuenta']].replace(' ', '').upper()
+
+                if cuenta_csv_raw[:2].isalpha():  # Detecta si es IBAN
+                    # Quitar los 4 primeros caracteres (p.ej. ES12) => código país + dígito de control
+                    cuenta_csv = cuenta_csv_raw[4:]
+                    entidad = cuenta_csv[:4]
+                    oficina = cuenta_csv[4:8]
+                    cuenta = cuenta_csv[8:]
+                else:
+                    # Cuenta nacional (CCC)
+                    entidad = cuenta_csv_raw[:4]
+                    oficina = cuenta_csv_raw[4:8]
+                    cuenta = cuenta_csv_raw[8:]
+
             try:
                 fecha_raw = row[config['fecha operacion']]
                 fecha_valor_raw = row[config['fecha valor']]
                 concepto = row[config['concepto']]
-                ref1 = row.get(config['referencia1'], '') if config['referencia1'] != "Sin asignar" else ''
-                ref2 = row.get(config['referencia2'], '') if config['referencia2'] != "Sin asignar" else ''
+                ref1 = row.get(config['referencia 1'], '') if config['referencia 1'] != "Sin asignar" else ''
+                ref2 = row.get(config['referencia 2'], '') if config['referencia 2'] != "Sin asignar" else ''
                 importe_str = row[config['importe']].replace(',', '.')
                 saldo_str = row[config['saldo']].replace(',', '.')
 

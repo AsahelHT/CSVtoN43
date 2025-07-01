@@ -27,15 +27,15 @@ def cargar_config():
         with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
             return json.load(f), True
     return {
-        'sep': ';',
+        'sep': '',
         'fecha operacion': 'Sin asignar',
         'fecha valor': 'Sin asignar',
         'concepto': 'Sin asignar',
         'importe': 'Sin asignar',
         'cuenta': 'Sin asignar',
         'saldo': 'Sin asignar',
-        'referencia1': 'Sin asignar',
-        'referencia2': 'Sin asignar',
+        'referencia 1': 'Sin asignar',
+        'referencia 2': 'Sin asignar',
         'nombre_empresa': '',
         'last_csv_path': '',
         'last_csv_file': '',
@@ -57,19 +57,43 @@ DIVISAS = {
 SUGERENCIAS_COLUMNAS = {
     'fecha operacion': ['fecha operación', 'operacion', 'fecha operacion'],
     'fecha valor': ['fecha valor', 'valor'],
-    'concepto': ['concepto'],
+    'concepto': ['concepto', 'descripcion', 'descripción'],
     'importe': ['importe', 'cantidad'],
     'cuenta': ['cuenta', 'número cuenta'],
     'saldo': ['saldo'],
-    'referencia1': ['referencia 1', 'ref1'],
-    'referencia2': ['referencia 2', 'ref2']
+    'referencia 1': ['referencia1', 'ref1', 'referencia 1'],
+    'referencia 2': ['referencia2', 'ref2', 'referencia 2']
 }
+
+def hay_campos_sin_asignar(config):
+    for clave in config:
+        if clave not in ("referencia 1", "referencia 2"):
+            if config[clave] == "Sin asignar":
+                return True
+    return False
 
 def mostrar_configuracion(parent, config) :
     # Evitar duplicados
     if ventanas_abiertas.get("config") and ventanas_abiertas["config"].winfo_exists():
         ventanas_abiertas["config"].focus()
         return
+    
+    state = {
+        'config': config,
+        'vars': {},
+        'df_columnas': [],
+        'tree': None,
+        'preview_frame': None,
+        'window': None,
+        'parent': parent
+    }
+
+    if not os.path.exists(CONFIG_FILE):
+        if not solicitar_csv(state):
+            return False
+    if configuracion_vacia(state['config']):
+        if not solicitar_csv(state):
+            return False
 
     #boton_inicio.config(state="disabled")
     window = tk.Toplevel(parent)
@@ -85,22 +109,7 @@ def mostrar_configuracion(parent, config) :
     window.grid_columnconfigure(0, weight=1, uniform="col")
     window.grid_columnconfigure(1, weight=2, uniform="col")
 
-    state = {
-        'config': config,
-        'vars': {},
-        'df_columnas': [],
-        'tree': None,
-        'preview_frame': None,
-        'window': window,
-        'parent': parent
-    }
-
-    if not os.path.exists(CONFIG_FILE):
-        if not solicitar_csv(state):
-            return False
-    if configuracion_vacia(state['config']):
-        if not solicitar_csv(state):
-            return False
+    state['window'] = window
 
     leer_columnas_csv(state)
     crear_campos(state)
@@ -191,7 +200,7 @@ def crear_campos(state):
     combos = {}
 
     for i, (key, _) in enumerate(SUGERENCIAS_COLUMNAS.items()):
-        label_text = key.replace("campo_", "").replace("_", " ").title()
+        label_text = key
 
         es_sin_asignar = config.get(key) == "Sin asignar"
         label_style = {
@@ -210,7 +219,8 @@ def crear_campos(state):
 
         if es_sin_asignar:
             combo.configure(style="Warning.TCombobox")
-            if not state.get("advertencia_label"):
+            if not state.get("advertencia_label") and key not in ("referencia 1", "referencia 2"):
+                print(var.get())
                 state["advertencia_label"] = mostrar_advertencia_final(window)
 
         etiquetas[key] = label
@@ -227,13 +237,14 @@ def crear_campos(state):
                     combo_ref.configure(style="Warning.TCombobox")
 
                 # Verificar si todos están asignados
-                if all(vars_[k].get() != "Sin asignar" for k in SUGERENCIAS_COLUMNAS if k not in ("referencia1", "referencia2")):
+                if not hay_campos_sin_asignar(config) or (all(vars_[k].get() != "Sin asignar" for k in SUGERENCIAS_COLUMNAS if k not in ("referencia 1", "referencia 2"))):
                     if state.get("advertencia_label"):
                         state["advertencia_label"].destroy()
                         state["advertencia_label"] = None
                 else:
                     if not state.get("advertencia_label"):
                         state["advertencia_label"] = mostrar_advertencia_final(window)
+
             var.trace_add("write", callback)
 
         # Aquí llamamos a la función pasándole las variables correctas
@@ -258,7 +269,6 @@ def crear_campos(state):
            command=lambda: guardar_configuracion(state))\
         .grid(row=row_total + 3, column=0, columnspan=2, pady=12, sticky='ew', padx=5)
 
-        
 
 def crear_preview(state):
     frame = LabelFrame(state['window'], text="Vista previa de la plantilla CSV", bootstyle="light")
@@ -304,14 +314,13 @@ def guardar_configuracion(state):
 
     # Detectar campos obligatorios sin asignar
     for campo in SUGERENCIAS_COLUMNAS:
-        if campo in ('referencia1', 'referencia2'):
+        if campo in ('referencia 1', 'referencia 2'):
             continue  # No obligatorios
         if config.get(campo) == "Sin asignar":
             campos_sin_asignar.append(campo)
 
     if campos_sin_asignar:
-        nombres = [campo.replace("campo_", "").replace("_", " ").title() for campo in campos_sin_asignar]
-        campos_str = "\n - " + "\n - ".join(nombres)
+        campos_str = "\n - " + "\n - ".join(campos_sin_asignar)
         respuesta = messagebox.askokcancel(
             "⚠️ Advertencia: campos sin asignar ⚠️",
             f"Los siguientes campos obligatorios no han sido asignados:{campos_str}\n\n"
@@ -326,8 +335,6 @@ def guardar_configuracion(state):
 
     guardar_config(config)
     state['window'].destroy()
-
-
 
 def abrir_csv_en_explorador(state):
     full_path = state['config'].get("last_csv_file", "")
@@ -361,7 +368,7 @@ def cambiar_plantilla_csv(state):
 def mostrar_advertencia_final(parent):
     advertencia = Label(
         parent,
-        text="⚠️ Algunos campos están sin asignar. Revísalos antes de continuar.",
+        text="⚠️ Algunos campos obligatorios están sin asignar. Revísalos antes de continuar.",
         style="Advertencia.TLabel",
         anchor="center",
         padding=10,

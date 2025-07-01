@@ -24,7 +24,7 @@ def obtener_ruta_icono():
 
 def hay_campos_sin_asignar(config):
     for clave in config:
-        if clave.startswith("campo_") and clave not in ("referencia1", "referencia2"):
+        if clave not in ("referencia 1", "referencia 2"):
             if config[clave] == "Sin asignar":
                 return True
     return False

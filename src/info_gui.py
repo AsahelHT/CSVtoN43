@@ -50,7 +50,7 @@ def mostrar_informacion():
         "Autor: Asahel Hernández Torné\n"
         "Contacto: asahel.dev@gmail.com\n"
         "\n"
-        "Versión: Build v2.0-010725\n"
+        "Versión: Build v2.0-020725\n"
         "Licencia: GPL-3.0 license\n"
     )
 
