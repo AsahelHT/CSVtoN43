@@ -10,9 +10,11 @@
 - 🧠 **Asignación automática de campos** al detectar nombres comunes como “fecha”, “importe”, “concepto”, etc.
 - 🔄 **Conversión a Norma 43 (AEB43)** siguiendo el estándar oficial.
 - 📤 **Generación automática de nombre de archivo** al exportar.
-- WIP 🔁 **Conversión inversa** de archivos `.txt` Norma 43 a `.csv`.
+- WIP 🔁 **Mejora de visualización en preview**`.
+
 
 ---
+
 
 ## 🧑‍💻 Requisitos
 
