@@ -3,28 +3,51 @@ from tkinter import Toplevel, filedialog, messagebox
 from ttkbootstrap import LabelFrame, Treeview, Scrollbar, Button
 import pandas as pd
 from conversor import generar_norma43_temp 
+from config_gui import cargar_config, mostrar_configuracion
 from conversor import convertir_con_archivo_existente
 import os
 import sys
+
 
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, 'media', 'ico.ico')
     return os.path.join(os.path.dirname(__file__), '..', 'media', 'ico.ico')
-def mostrar_previsualizacion(config):
+
+def mostrar_previsualizacion(parent, config, boton_inicio):
+    boton_inicio.config(state="disabled")
+    config, existe_config = cargar_config()
+
+
+    if not existe_config:
+        ok = mostrar_configuracion(parent, config)
+        if not ok:
+            boton_inicio.config(state="normal")
+            return
+
+    
+
+    def on_convertir():
+        convertir_con_archivo_existente(config, archivo)
+        preview_win.destroy()
+        boton_inicio.config(state="normal")
+
+
     archivo = filedialog.askopenfilename(
         title="Seleccionar archivo CSV",
         filetypes=[("CSV files", "*.csv")]
     )
+
     if not archivo:
+        boton_inicio.config(state="normal")
         return
 
     preview_win = Toplevel()
     preview_win.title("🔍 Previsualización de la conversión")
     preview_win.geometry("1000x800")
     preview_win.iconbitmap(obtener_ruta_icono())
-    
+    preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy(), boton_inicio.config(state="normal")))
     # Contenedor principal
     
     container = tk.Frame(preview_win)
@@ -49,7 +72,7 @@ def mostrar_previsualizacion(config):
 
 
     # --- Previsualización CSV ---
-    frame_csv = LabelFrame(container, text="📄 CSV Original (7 primeras líneas)", bootstyle="primary")
+    frame_csv = LabelFrame(container, text="📄 Previsualización CSV Original (7 primeras líneas)", bootstyle="primary")
     frame_csv.grid(row=1, column=0, sticky="nsew", padx=5, pady=5)
     _mostrar_tabla_csv(frame_csv, archivo)
 
@@ -67,7 +90,7 @@ def mostrar_previsualizacion(config):
     )
     emoji_label.grid(row=0, column=0, sticky="nsew")        
     # --- Previsualización Norma43 ---
-    frame_n43 = LabelFrame(container, text="📃 Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="light")
+    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="light")
     frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
     _mostrar_tabla_norma43(frame_n43, archivo, config)
 
@@ -83,7 +106,7 @@ def mostrar_previsualizacion(config):
         bootstyle="success",
         width=5,
         style="TButton",
-        command=lambda: convertir_con_archivo_existente(config, archivo)
+        command=lambda: on_convertir()
     )
     boton_guardar.grid(row=0, column=0, sticky="nsew")
 

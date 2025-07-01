@@ -8,6 +8,7 @@ import pandas as pd
 import json
 import csv
 
+ok = False
 
 BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath((os.path.dirname(__file__))))
 
@@ -63,9 +64,19 @@ SUGERENCIAS_COLUMNAS = {
 
 class ConfiguracionVentana(tk.Toplevel):
     def __init__(self, parent, config):
+        global ok
+        self.configuracion = config
+        ok = False
+        if not os.path.exists(CONFIG_FILE):
+            ok = self._solicitar_csv()
+        if self._configuracion_vacia():
+            ok = self._solicitar_csv()
+
+        if not ok:
+            return
+        
         super().__init__(parent)
         self.iconbitmap(obtener_ruta_icono())
-        self.configuracion = config
         self.df_columnas = []
 
         self.title("⚙️ Configuración de campos")
@@ -76,10 +87,7 @@ class ConfiguracionVentana(tk.Toplevel):
         self.grid_columnconfigure(0, weight=1, uniform="col")
         self.grid_columnconfigure(1, weight=2, uniform="col")
 
-        if not os.path.exists(CONFIG_FILE):
-            self._solicitar_csv()
-        if self._configuracion_vacia():
-            self._solicitar_csv()
+        
 
         self.vars = {}
         self._leer_columnas_csv()
@@ -90,7 +98,11 @@ class ConfiguracionVentana(tk.Toplevel):
         return not all(k in self.configuracion for k in SUGERENCIAS_COLUMNAS)
 
     def _solicitar_csv(self):
-        messagebox.showinfo("Carga inicial", "No se ha encontrado una configuración previa.\nSelecciona un archivo CSV para usarlo como plantilla.")
+        respuesta = messagebox.askokcancel("Cargar plantilla CSV", "No se ha encontrado una configuración previa.\nSelecciona un archivo CSV para utilizar como plantilla.")
+        
+        if not respuesta:
+            return
+        
         archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
         if archivo:
             carpeta = os.path.dirname(archivo)
@@ -99,8 +111,10 @@ class ConfiguracionVentana(tk.Toplevel):
             for clave in SUGERENCIAS_COLUMNAS:
                 self.configuracion[clave] = "Sin asignar"
             guardar_config(self.configuracion)
+            return True
         else:
             self.destroy()
+            return False
 
     def _leer_columnas_csv(self):
         try:
@@ -225,4 +239,7 @@ class ConfiguracionVentana(tk.Toplevel):
         self.destroy()
 
 def mostrar_configuracion(parent, config):
+    ok = False
     ConfiguracionVentana(parent, config)
+    return ok
+

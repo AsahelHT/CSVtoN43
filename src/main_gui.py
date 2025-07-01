@@ -3,7 +3,6 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from config_gui import cargar_config, mostrar_configuracion
 from info_gui import mostrar_informacion
-from conversor import convertir_con_archivo
 from preview_gui import mostrar_previsualizacion
 
 import os
@@ -40,7 +39,7 @@ def iniciar_aplicacion():
         text="EMPEZAR",
         width=30,
         bootstyle="primary",
-        command=lambda: mostrar_previsualizacion(config)
+        command=lambda: mostrar_previsualizacion(app, config, btn_convertir)
     )
     btn_convertir.pack(pady=10)
 
