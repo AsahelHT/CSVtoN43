@@ -5,7 +5,7 @@
 import ttkbootstrap as ttk
 import tkinter as tk
 from ttkbootstrap.constants import *
-from config_gui import cargar_config, mostrar_configuracion, CONFIG_FILE
+from config_gui import cargar_config, mostrar_configuracion, CONFIG_FILE, guardar_config
 from info_gui import mostrar_informacion
 from preview_gui import mostrar_previsualizacion
 
@@ -24,19 +24,50 @@ def obtener_ruta_icono():
 
 def hay_campos_sin_asignar(config):
     for clave in config:
-        if clave not in ("referencia 1", "referencia 2"):
-            if config[clave] == "Sin asignar":
-                return True
-    return False
+        if config[clave] == "Sin asignar":
+            if clave not in ("referencia 1", "referencia 2"):
+                return 1
+            else:
+                return 2
+    return 0
 
 def iniciar_aplicacion():
+    def actualizar_estado_boton_tema():
+        if hay_ventanas_abiertas(app) or tema_en_cooldown["estado"]:
+            btn_tema.config(state="disabled")
+            app.after(1000, lambda: finalizar_cooldown())
+        else:
+            btn_tema.config(state="normal")
+
+    def finalizar_cooldown():
+        tema_en_cooldown["estado"] = False
+        actualizar_estado_boton_tema()
+
+    def cambiar_tema():
+        nuevo_tema = "flatly" if tema_actual["nombre"] == "darkly" else "darkly"
+        app.style.theme_use(nuevo_tema)
+        tema_actual["nombre"] = nuevo_tema
+        btn_tema.config(text="🌞" if nuevo_tema == "darkly" else "🌙")
+        
+        config['tema'] = nuevo_tema
+        guardar_config(config)
+        # Activar cooldown
+        tema_en_cooldown["estado"] = True
+        actualizar_estado_boton_tema()
+
     config, existe_config = cargar_config()
-    app = ttk.Window(title="CSVtoN43", themename="darkly")
+
+
+    tema_actual = {"nombre": config.get("tema", "darkly")} 
+    tema_en_cooldown = {"estado": False} 
+
+    app = ttk.Window(title="CSVtoN43", themename=tema_actual["nombre"])
+    
     app.geometry("500x250")
     app.iconbitmap(obtener_ruta_icono())
 
     app.resizable(False, False)
-
+    ventanas_abiertas["root"] = app
     # Frame superior para botones info y configuración
     top_frame = ttk.Frame(app)
     top_frame.pack(anchor="ne", pady=10, padx=10)
@@ -46,7 +77,7 @@ def iniciar_aplicacion():
 
     # Estilo o advertencia en el botón de configuración si hay campos sin asignar
     
-    btn_config = ttk.Button(top_frame, text="⚙️", width=3, bootstyle="light-outline", command=lambda: mostrar_configuracion(app, config))
+    btn_config = ttk.Button(top_frame, text="⚙️", width=3, bootstyle="secondary-outline", command=lambda: mostrar_configuracion(app, config))
     btn_config.pack(side="right")
 
     # Título
@@ -61,6 +92,14 @@ def iniciar_aplicacion():
     )
     btn_convertir.pack(pady=10)
 
+        # Frame inferior para el botón de tema
+    bottom_frame = ttk.Frame(app)
+    bottom_frame.pack(side="bottom", fill="x", pady=5, padx=10)
+
+    btn_tema = ttk.Button(bottom_frame,text="🌞" if config['tema'] == "darkly" else "🌙", width=3, bootstyle="secondary-outline", command=cambiar_tema)
+    btn_tema.pack(side="left")
+
+
     # Función que comprueba si hay ventanas abiertas y actualiza el estado del botón
     def hay_ventanas_abiertas(root):
         return any(isinstance(w, tk.Toplevel) and w.winfo_exists() for w in root.winfo_children())
@@ -74,18 +113,28 @@ def iniciar_aplicacion():
             nueva_config, _ = cargar_config()
             config.update(nueva_config)  # actualiza el dict
 
-            if hay_campos_sin_asignar(config):
+            if hay_campos_sin_asignar(config) == 2:
                 btn_config.config(text="⚙️❗", bootstyle="warning-outline", width=4)
-            else:
-                btn_config.config(text="⚙️", bootstyle="light-outline", width=3)
+                if not hay_ventanas_abiertas(app):
+                    btn_convertir.config(state="normal")
+                else:
+                  btn_convertir.config(state="disabled")
 
-            if not hay_ventanas_abiertas(app):
-                btn_convertir.config(state="normal")
-            else:
+            elif hay_campos_sin_asignar(config) == 1:
+                btn_config.config(text="⚙️❗", bootstyle="danger-outline", width=4)
                 btn_convertir.config(state="disabled")
 
+            else:
+                btn_config.config(text="⚙️", bootstyle="secondary-outline", width=3)
+                if not hay_ventanas_abiertas(app):
+                    btn_convertir.config(state="normal")
+                else:
+                    btn_convertir.config(state="disabled")
+
+        actualizar_estado_boton_tema()
+
         # Llama a sí misma cada 1000 ms (1 segundo)
-        app.after(1000, comprobar_configuracion)
+        app.after(500, comprobar_configuracion)
 
     if not existe_config:
         comprobar_configuracion()  

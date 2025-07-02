@@ -1,6 +1,7 @@
 import os
 import sys
 import tkinter as tk
+import ttkbootstrap as ttk
 from tkinter import filedialog, messagebox
 from ttkbootstrap import Style
 from ttkbootstrap.widgets import Combobox, Entry, Button, Frame, Label, LabelFrame, Treeview, Scrollbar
@@ -39,7 +40,8 @@ def cargar_config():
         'nombre_empresa': '',
         'last_csv_path': '',
         'last_csv_file': '',
-        'last_output_path': ''
+        'last_output_path': '',
+        'tema':'darkly'
     }, False
 
 def guardar_config(config):
@@ -72,14 +74,46 @@ def hay_campos_sin_asignar(config):
                 return True
     return False
 
-def mostrar_configuracion(parent, config) :
+def al_cerrar(parent, state):
+    from json import dumps
+
+    window = state['window']
+    config = state['config']
+    saved_config = state.get('saved_config', {})
+
+    # Actualizar config actual con lo que hay en la interfaz
+    for key, var in state['vars'].items():
+        config[key] = var.get()
+
+    # Comparar solo los campos relevantes
+    claves_relevantes = list(SUGERENCIAS_COLUMNAS.keys()) + ['sep', 'nombre_empresa', 'divisa_nombre']
+    config_actual = {k: config.get(k) for k in claves_relevantes}
+    config_guardado = {k: saved_config.get(k) for k in claves_relevantes}
+
+    if dumps(config_actual, sort_keys=True) != dumps(config_guardado, sort_keys=True):
+        respuesta = messagebox.askyesno(
+            "⚠️ Cambios no guardados ⚠️",
+            "Has hecho cambios en la configuración que no se han guardado.\n¿Estás seguro de que quieres salir sin guardar?"
+        )
+        if not respuesta:
+            return
+        
+    if "config" in ventanas_abiertas:
+        del ventanas_abiertas["config"]
+
+    window.destroy()
+    parent.destroy()
+
+def mostrar_configuracion(parent, config, archivo=None) :
     # Evitar duplicados
     if ventanas_abiertas.get("config") and ventanas_abiertas["config"].winfo_exists():
         ventanas_abiertas["config"].focus()
         return
     
+    saved_config, _ = cargar_config()
     state = {
         'config': config,
+        'saved_config': saved_config,
         'vars': {},
         'df_columnas': [],
         'tree': None,
@@ -96,13 +130,13 @@ def mostrar_configuracion(parent, config) :
             return False
 
     #boton_inicio.config(state="disabled")
-    window = tk.Toplevel(parent)
+    window = ttk.Toplevel(parent)
 
     window.title("⚙️ Configuración de campos")
     window.geometry("1500x700")
     window.minsize(1500, 700)
     window.iconbitmap(obtener_ruta_icono())
-    window.protocol("WM_DELETE_WINDOW", lambda: (window.destroy()))
+    window.protocol("WM_DELETE_WINDOW", lambda: al_cerrar(window, state))
     
     ventanas_abiertas["config"] = window
     window.grid_rowconfigure(0, weight=1)
@@ -111,9 +145,9 @@ def mostrar_configuracion(parent, config) :
 
     state['window'] = window
 
-    leer_columnas_csv(state)
+    leer_columnas_csv(state, archivo)
     crear_campos(state)
-    crear_preview(state)
+    crear_preview(state, archivo)
 
 def configuracion_vacia(config):
     return not all(k in config for k in SUGERENCIAS_COLUMNAS)
@@ -134,7 +168,7 @@ def solicitar_csv(state):
                 state['config']['sep'] = sep_detectado
             for clave in SUGERENCIAS_COLUMNAS:
                 state['config'][clave] = "Sin asignar"
-            guardar_config(state['config'])
+            #guardar_config(state['config'])
             return True
         else:
             return False
@@ -142,11 +176,17 @@ def solicitar_csv(state):
         messagebox.showerror("Error", f"No se pudo abrir el archivo CSV:\n{e}")
         return False
 
-def leer_columnas_csv(state):
+def leer_columnas_csv(state, archivo=None):
     config = state['config']
     full_path = config.get("last_csv_file", "")
+
+    if archivo != None:
+        full_path = archivo
+        state['config']['last_csv_file'] = archivo
+
     if not full_path or not os.path.isfile(full_path):
         state['df_columnas'] = []
+        messagebox.showwarning("Archivo no encontrado", "No se encontró el archivo deseado")
         return
     try:
         with open(full_path, 'r', encoding='utf-8') as f:
@@ -159,6 +199,7 @@ def leer_columnas_csv(state):
         asignar_campos_automaticamente(config, columnas)
     except:
         state['df_columnas'] = []
+        messagebox.showerror("Error al cargar CSV", f"No se pudo cargar la vista previa del CSV.\n")
 
 def asignar_campos_automaticamente(config, columnas):
     columnas_csv = [col.strip().lower() for col in columnas]
@@ -202,7 +243,7 @@ def crear_campos(state):
         es_sin_asignar = config.get(key) == "Sin asignar"
         label_style = {
             "font": ("Arial", 10, "bold"),
-            "foreground": "#ffc107" if es_sin_asignar else "white"
+            "foreground": "#ffc107" if es_sin_asignar else ("white" if "dark" in config['tema'] else "black")
         }
 
         label = Label(frame_total, text=label_text, **label_style)
@@ -217,7 +258,6 @@ def crear_campos(state):
         if es_sin_asignar:
             combo.configure(style="Warning.TCombobox")
             if not state.get("advertencia_label") and key not in ("referencia 1", "referencia 2"):
-                print(var.get())
                 state["advertencia_label"] = mostrar_advertencia_final(window)
 
         etiquetas[key] = label
@@ -227,7 +267,7 @@ def crear_campos(state):
             def callback(*_):
                 valor = var.get()
                 if valor != "Sin asignar":
-                    label_ref.config(foreground="white", font=("Arial", 10, "bold"))
+                    label_ref.config(foreground="white" if "dark" in config['tema'] else "black", font=("Arial", 10, "bold"))
                     combo_ref.configure(style="primary.TCombobox")
                 else:
                     label_ref.config(foreground="#ffc107", font=("Arial", 10, "bold"))
@@ -263,12 +303,11 @@ def crear_campos(state):
         .grid(row=row_total + 2, column=0, columnspan=2, pady=(0, 24), sticky='ew', padx=5)
 
     Button(frame_total, text="💾 Guardar configuración", bootstyle="info",
-           command=lambda: guardar_configuracion(state))\
-        .grid(row=row_total + 3, column=0, columnspan=2, pady=12, sticky='ew', padx=5)
+       command=lambda: guardar_configuracion(state), padding=(0, 10))\
+    .grid(row=row_total + 3, column=0, columnspan=2, pady=12, sticky='ew', padx=5)
 
-
-def crear_preview(state):
-    frame = LabelFrame(state['window'], text="Vista previa de la plantilla CSV", bootstyle="light")
+def crear_preview(state, archivo=None):
+    frame = LabelFrame(state['window'], text="Vista previa de la plantilla CSV", bootstyle="secondary")
     frame.grid(row=0, column=1, sticky="nsew", padx=15, pady=10)
     frame.grid_rowconfigure(0, weight=1)
     frame.grid_columnconfigure(0, weight=1)
@@ -281,12 +320,17 @@ def crear_preview(state):
 
     state['tree'] = tree
     state['preview_frame'] = frame
-    cargar_preview_csv(state)
+    cargar_preview_csv(state, archivo)
 
-def cargar_preview_csv(state):
+def cargar_preview_csv(state, archivo=None):
     config = state['config']
     full_path = config.get("last_csv_file", "")
+
+    if archivo != None:
+        full_path = archivo
+        state['config']['last_csv_file'] = archivo
     if not full_path or not os.path.isfile(full_path):
+        messagebox.showwarning("Archivo no encontrado", "No se encontró el archivo deseado")
         return
     try:
         df = pd.read_csv(full_path, sep=config.get("sep", ";"))
@@ -331,6 +375,8 @@ def guardar_configuracion(state):
     config['divisa_codigo'] = DIVISAS.get(nombre_divisa, '978')
 
     guardar_config(config)
+    if "config" in ventanas_abiertas:
+        del ventanas_abiertas["config"]
     state['window'].destroy()
 
 def abrir_csv_en_explorador(state):
@@ -345,7 +391,11 @@ def abrir_csv_en_explorador(state):
 
 def cambiar_plantilla_csv(state):
     try:
+        window = ventanas_abiertas["config"]
+        
         archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
+
+        window.focus()
         if archivo:
             carpeta = os.path.dirname(archivo)
             state['config']['last_csv_path'] = carpeta
@@ -355,7 +405,10 @@ def cambiar_plantilla_csv(state):
                 state['config']['sep'] = csv.Sniffer().sniff(sample).delimiter
             for clave in SUGERENCIAS_COLUMNAS:
                 state['config'][clave] = "Sin asignar"
+
             guardar_config(state['config'])
+            if "config" in ventanas_abiertas:
+                del ventanas_abiertas["config"]
             state['window'].destroy()
             state['window'].after(100, lambda: mostrar_configuracion(state['parent'], state['config']))
     except Exception as e:
@@ -365,7 +418,7 @@ def cambiar_plantilla_csv(state):
 def mostrar_advertencia_final(parent):
     advertencia = Label(
         parent,
-        text="⚠️ Algunos campos obligatorios están sin asignar. Revísalos antes de continuar.",
+        text="⚠️ Algunos campos obligatorios están sin asignar. Revísalos antes de continuar. ⚠️",
         style="Advertencia.TLabel",
         anchor="center",
         padding=10,

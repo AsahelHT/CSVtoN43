@@ -94,6 +94,13 @@ def obtener_ruta_icono():
         return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
     return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
 
+def hay_campos_sin_asignar(config):
+    for clave in config:
+        if clave not in ("referencia 1", "referencia 2"):
+            if config[clave] == "Sin asignar":
+                return True
+    return False
+
 def mostrar_previsualizacion(parent, config):
 
     def on_convertir():
@@ -109,9 +116,16 @@ def mostrar_previsualizacion(parent, config):
     config, existe_config = cargar_config()
 
     if not existe_config:
-        ok = mostrar_configuracion(parent, config)
-        if not ok:
-            return
+        messagebox.showerror("No existe configuración guardada", "Porfavor, guarde una configuración.")
+        if parent:
+            parent.after(100, lambda: mostrar_configuracion(parent, config))
+        return
+        
+    if hay_campos_sin_asignar(config):
+        messagebox.showerror("Existen campos obligatorios sin asignar", "Porfavor, revise la configuración.")
+        if parent:
+            parent.after(100, lambda: mostrar_configuracion(parent, config))
+        return
 
     archivo = filedialog.askopenfilename(
         title="Seleccionar archivo CSV",
@@ -123,11 +137,16 @@ def mostrar_previsualizacion(parent, config):
 
     ok, mensaje = validar_estructura_csv(config, archivo)
     if not ok:
-        messagebox.showerror("Archivo incompatible", mensaje)
-        if parent:
-            parent.after(100, lambda: mostrar_configuracion(parent, config))
-        return
+        respuesta = messagebox.askyesno(
+            "Archivo incompatible",
+            f"{mensaje}\n\n¿Deseas abrir la configuración para adaptarla al nuevo CSV?"
+        )
+        if respuesta:  # Sí → abrir configuración
+            if parent:
+                parent.after(100, lambda: mostrar_configuracion(parent, config, archivo))
     
+        return
+
     # Verifica si el contenedor principal sigue existiendo
     if not parent.winfo_exists():
         return
@@ -184,7 +203,7 @@ def mostrar_previsualizacion(parent, config):
     )
     emoji_label.grid(row=0, column=0, sticky="nsew")        
     # --- Previsualización Norma43 ---
-    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="light")
+    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="secondary")
     frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
     
     _mostrar_tabla_norma43(frame_n43, archivo, config,  parent=preview_win)
@@ -296,17 +315,23 @@ def _mostrar_tabla_csv(frame, archivo, config):
             tree.insert("", "end", values=(valor,))
 
 def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):
-    text = Text(
+    import tkinter as tk
+    text = tk.Text(
         frame,
         wrap="none",
         font=("Courier", 10),
-        bg="#2c2f33",
-        fg="white",
-        insertbackground="white",
-        height=8  # Número de líneas visibles
+        height=8,
+        relief="flat",
+        borderwidth=0,
+        highlightthickness=0
     )
     text.pack(fill=BOTH, expand=True, side=LEFT)
     
+    text.configure(
+        bg="#2c2f33",         
+        fg="white",           
+        insertbackground="white"
+    )
    
     # Colores legibles en tema oscuro
 

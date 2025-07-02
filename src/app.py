@@ -3,7 +3,8 @@
 ventanas_abiertas = {
     "config": None,
     "info": None,
-    "preview": None
+    "preview": None,
+    "root":None
 }
 
 
