@@ -136,9 +136,9 @@ def iniciar_aplicacion():
         # Llama a sí misma cada 1000 ms (1 segundo)
         app.after(500, comprobar_configuracion)
 
-    if not existe_config:
-        comprobar_configuracion()  
-        mostrar_configuracion(app, config)
+    #if not existe_config:
+    #    comprobar_configuracion()  
+    #    mostrar_configuracion(app, config, None)
 
     comprobar_configuracion()  
     app.mainloop()

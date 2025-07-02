@@ -99,7 +99,7 @@ def al_cerrar(parent, state):
             return
         
     if "config" in ventanas_abiertas:
-        del ventanas_abiertas["config"]
+        ventanas_abiertas["config"] = None
 
     window.destroy()
     parent.destroy()
@@ -121,6 +121,9 @@ def mostrar_configuracion(parent, config, archivo=None) :
         'window': None,
         'parent': parent
     }
+
+    if archivo != None:
+        cambiar_plantilla_csv(state, archivo)
 
     if not os.path.exists(CONFIG_FILE):
         if not solicitar_csv(state):
@@ -168,7 +171,7 @@ def solicitar_csv(state):
                 state['config']['sep'] = sep_detectado
             for clave in SUGERENCIAS_COLUMNAS:
                 state['config'][clave] = "Sin asignar"
-            #guardar_config(state['config'])
+            guardar_config(state['config'])
             return True
         else:
             return False
@@ -299,7 +302,7 @@ def crear_campos(state):
         .grid(row=row_total + 1, column=0, columnspan=2, pady=(0, 6), sticky='ew', padx=5)
 
     Button(frame_total, text="🔄 Cambiar plantilla CSV", bootstyle="warning",
-           command=lambda: cambiar_plantilla_csv(state))\
+           command=lambda: cambiar_plantilla_csv(state, None))\
         .grid(row=row_total + 2, column=0, columnspan=2, pady=(0, 24), sticky='ew', padx=5)
 
     Button(frame_total, text="💾 Guardar configuración", bootstyle="info",
@@ -376,7 +379,7 @@ def guardar_configuracion(state):
 
     guardar_config(config)
     if "config" in ventanas_abiertas:
-        del ventanas_abiertas["config"]
+        ventanas_abiertas["config"] = None
     state['window'].destroy()
 
 def abrir_csv_en_explorador(state):
@@ -389,11 +392,15 @@ def abrir_csv_en_explorador(state):
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo abrir el archivo CSV:\n{e}")
 
-def cambiar_plantilla_csv(state):
+def cambiar_plantilla_csv(state, archivo=None):
     try:
-        window = ventanas_abiertas["config"]
-        
-        archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
+        if ventanas_abiertas.get("config") is not None:
+            window = ventanas_abiertas["config"]
+        else:
+            window = ventanas_abiertas["root"]
+            
+        if archivo == None:
+            archivo = filedialog.askopenfilename(title="Seleccionar archivo CSV", filetypes=[("CSV files", "*.csv")])
 
         window.focus()
         if archivo:
@@ -408,11 +415,13 @@ def cambiar_plantilla_csv(state):
 
             guardar_config(state['config'])
             if "config" in ventanas_abiertas:
-                del ventanas_abiertas["config"]
-            state['window'].destroy()
-            state['window'].after(100, lambda: mostrar_configuracion(state['parent'], state['config']))
+                ventanas_abiertas["config"] = None 
+                if state['window']:
+                    state['window'].destroy()
+
+            state['parent'].after(100, lambda: mostrar_configuracion(state['parent'], state['config'], None))
     except Exception as e:
-        messagebox.showerror("Error", f"No se pudo abrir el archivo CSV:\n{e}")
+        messagebox.showerror("Error abriendo archivo", f"No se pudo abrir el archivo CSV:\n{e}")
 
 
 def mostrar_advertencia_final(parent):

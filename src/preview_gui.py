@@ -29,7 +29,7 @@ colores = {
     'importe': '#facc15',   
     'saldo': "#ff7c01",     
     'referencia 1': '#c084fc',      
-    'referencia 2': '#f472b6',       
+    'referencia 2': '#c084fc',       
     'divisa':"#00ffbb",
     'tipo importe':"#00ff00",
     'contadores':"#ff0000"
@@ -103,8 +103,8 @@ def hay_campos_sin_asignar(config):
 
 def mostrar_previsualizacion(parent, config):
 
-    def on_convertir():
-        convertir_con_archivo_existente(config, archivo)
+    def on_convertir(lineas_n43):
+        convertir_con_archivo_existente(config, archivo, lineas_n43)
         preview_win.destroy()
 
     # Evitar duplicados
@@ -118,13 +118,13 @@ def mostrar_previsualizacion(parent, config):
     if not existe_config:
         messagebox.showerror("No existe configuración guardada", "Porfavor, guarde una configuración.")
         if parent:
-            parent.after(100, lambda: mostrar_configuracion(parent, config))
+            parent.after(100, lambda: mostrar_configuracion(parent, config, None))
         return
         
     if hay_campos_sin_asignar(config):
         messagebox.showerror("Existen campos obligatorios sin asignar", "Porfavor, revise la configuración.")
         if parent:
-            parent.after(100, lambda: mostrar_configuracion(parent, config))
+            parent.after(100, lambda: mostrar_configuracion(parent, config, None))
         return
 
     archivo = filedialog.askopenfilename(
@@ -144,7 +144,6 @@ def mostrar_previsualizacion(parent, config):
         if respuesta:  # Sí → abrir configuración
             if parent:
                 parent.after(100, lambda: mostrar_configuracion(parent, config, archivo))
-    
         return
 
     # Verifica si el contenedor principal sigue existiendo
@@ -206,7 +205,8 @@ def mostrar_previsualizacion(parent, config):
     frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="secondary")
     frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
     
-    _mostrar_tabla_norma43(frame_n43, archivo, config,  parent=preview_win)
+    lineas_n43 = generar_norma43_temp(archivo, config)
+    _mostrar_tabla_norma43(frame_n43, lineas_n43, parent=preview_win)
     
     # --- Boton de guardar ---
     arrow_frame = ttk.Frame(container)
@@ -220,7 +220,7 @@ def mostrar_previsualizacion(parent, config):
         bootstyle="success",
         width=5,
         style="TButton",
-        command=lambda: on_convertir()
+        command=lambda: on_convertir(lineas_n43)
     )
     boton_guardar.grid(row=0, column=0, sticky="nsew")
       
@@ -277,7 +277,7 @@ def _mostrar_tabla_csv(frame, archivo, config):
         if 'cuenta' in df.columns:
             def limpiar_iban(valor):
                 valor = str(valor).replace(" ", "")
-                if valor[:2].isalpha() and len(valor) > 18:
+                if valor[:2].isalpha() and len(valor) > 20:
                     return valor[4:]  # elimina 'ES' + 2 dígitos
                 return valor
 
@@ -314,7 +314,7 @@ def _mostrar_tabla_csv(frame, archivo, config):
         for valor in df[col]:
             tree.insert("", "end", values=(valor,))
 
-def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):
+def _mostrar_tabla_norma43(frame, lineas, parent=None):
     import tkinter as tk
     text = tk.Text(
         frame,
@@ -339,7 +339,7 @@ def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):
         text.tag_config(campo, foreground=color)
 
     try:
-        lineas = generar_norma43_temp(archivo_csv, config)
+        
         if not lineas:
             raise ValueError("No se generó contenido.")
 
@@ -359,32 +359,48 @@ def _mostrar_tabla_norma43(frame, archivo_csv, config, parent=None):
                 text.tag_add('fecha valor',     f"{i+1}.16", f"{i+1}.22")
                 text.tag_add('tipo importe', f"{i+1}.27", f"{i+1}.28")
                 text.tag_add('importe',   f"{i+1}.28", f"{i+1}.42")
-                text.tag_add('concepto',  f"{i+1}.52", f"{i+1}.80")
+                text.tag_add('referencia 1',  f"{i+1}.52", f"{i+1}.80")
 
             elif linea.startswith("23"):
                 text.tag_add('codigo',     f"{i+1}.0",  f"{i+1}.2")
                 text.tag_add('contadores', f"{i+1}.2", f"{i+1}.4")
-                text.tag_add('referencia 1', f"{i+1}.4", f"{i+1}.64")
+                if linea.startswith("2301") and i > 0:
+                    linea_anterior = muestra[i - 1].strip()
+                    referencia1_anterior = linea_anterior[52:80]
+                    # Comprobar si la referencia 1 anterior termina en "0", la linea ref1 es concepto
+                    if referencia1_anterior.rstrip().endswith("0"):
+                        text.tag_add('concepto', f"{i+1}.4", f"{i+1}.64")
+                    else:
+                        if i < len(muestra) - 1:
+                            linea_siguiente = muestra[i + 1].strip()
+                            if linea_siguiente.startswith("2302"):
+                                text.tag_add('referencia 2', f"{i+1}.4", f"{i+1}.64")
+                            else:
+                                text.tag_add('concepto', f"{i+1}.4", f"{i+1}.64")
+                elif linea.startswith("2301"):
+                    text.tag_add('concepto', f"{i+1}.4", f"{i+1}.64")
+
+            
 
             elif linea.startswith("11"):
                 text.tag_add('codigo',     f"{i+1}.0",  f"{i+1}.2")
-                text.tag_add('cuenta', f"{i+1}.2", f"{i+1}.22")
-                text.tag_add('fecha operacion', f"{i+1}.22", f"{i+1}.28")
-                text.tag_add('fecha valor', f"{i+1}.28", f"{i+1}.34")
-                text.tag_add('tipo importe', f"{i+1}.34", f"{i+1}.35")
-                text.tag_add('saldo', f"{i+1}.35", f"{i+1}.49")
-                text.tag_add('divisa', f"{i+1}.49", f"{i+1}.52")
+                text.tag_add('cuenta', f"{i+1}.2", f"{i+1}.20")
+                text.tag_add('fecha operacion', f"{i+1}.20", f"{i+1}.26")
+                text.tag_add('fecha valor', f"{i+1}.26", f"{i+1}.32")
+                text.tag_add('tipo importe', f"{i+1}.32", f"{i+1}.33")
+                text.tag_add('saldo', f"{i+1}.33", f"{i+1}.47")
+                text.tag_add('divisa', f"{i+1}.47", f"{i+1}.50")
 
             elif linea.startswith("33"):
                 text.tag_add('codigo',     f"{i+1}.0",  f"{i+1}.2")
-                text.tag_add('cuenta', f"{i+1}.2", f"{i+1}.22")
-                text.tag_add('contadores', f"{i+1}.22", f"{i+1}.27")
-                text.tag_add('importe',   f"{i+1}.27", f"{i+1}.41")
-                text.tag_add('contadores', f"{i+1}.41", f"{i+1}.46")
-                text.tag_add('importe',   f"{i+1}.46", f"{i+1}.60")
-                text.tag_add('tipo importe', f"{i+1}.60", f"{i+1}.61")
-                text.tag_add('saldo', f"{i+1}.61", f"{i+1}.75")
-                text.tag_add('divisa', f"{i+1}.75", f"{i+1}.78")
+                text.tag_add('cuenta', f"{i+1}.2", f"{i+1}.20")
+                text.tag_add('contadores', f"{i+1}.20", f"{i+1}.25")
+                text.tag_add('importe',   f"{i+1}.25", f"{i+1}.39")
+                text.tag_add('contadores', f"{i+1}.39", f"{i+1}.44")
+                text.tag_add('importe',   f"{i+1}.44", f"{i+1}.58")
+                text.tag_add('tipo importe', f"{i+1}.58", f"{i+1}.59")
+                text.tag_add('saldo', f"{i+1}.59", f"{i+1}.73")
+                text.tag_add('divisa', f"{i+1}.73", f"{i+1}.76")
 
             elif linea.startswith("88"):
                 text.tag_add('codigo',     f"{i+1}.0",  f"{i+1}.2")
