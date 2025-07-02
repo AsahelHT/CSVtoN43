@@ -9,7 +9,7 @@ import pandas as pd
 import json
 import csv
 
-from app import ventanas_abiertas
+from app import ventanas_abiertas, ruta_icono
 
 ok = False
 
@@ -138,7 +138,7 @@ def mostrar_configuracion(parent, config, archivo=None) :
     window.title("⚙️ Configuración de campos")
     window.geometry("1500x700")
     window.minsize(1500, 700)
-    window.iconbitmap(obtener_ruta_icono())
+    window.iconbitmap(ruta_icono)
     window.protocol("WM_DELETE_WINDOW", lambda: al_cerrar(window, state))
     
     ventanas_abiertas["config"] = window

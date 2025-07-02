@@ -88,14 +88,16 @@ pip install -r requirements.txt
 
 ---
 
-## 🛠️ Compilación con PyInstaller (opcional)
+## 🛠️ Compilación con Nuitka (opcional)
 
 Si quieres generar un ejecutable `.exe` para Windows:
 
 ```bash
-pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../media/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --add-data "../media/csv2n43.ico;media"
+pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../media/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "../media/csv2n43.ico;media"
 
 ```
+```bash
+python -m nuitka --standalone --enable-plugin=tk-inter --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=../media/csv2n43.ico=media/csv2n43.ico  --windows-icon-from-ico=../media/csv2n43.ico CSVtoN43.py                
 
 ---
 
@@ -106,3 +108,6 @@ pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../media/csv2n43.
 - 🧪 Pruebas con CSV de diferentes entidades bancarias.
 
 ---
+
+
+

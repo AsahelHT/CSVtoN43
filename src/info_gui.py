@@ -5,7 +5,7 @@ from ttkbootstrap.constants import *
 import sys
 import os
 
-from app import ventanas_abiertas
+from app import ventanas_abiertas, ruta_icono
 
 
 def obtener_ruta_icono():
@@ -21,7 +21,7 @@ def mostrar_informacion():
         return
 
     info_win = ttk.Toplevel()
-    info_win.iconbitmap(obtener_ruta_icono())
+    info_win.iconbitmap(ruta_icono)
     info_win.title("Información de la aplicación")
     info_win.geometry("500x400")
     info_win.resizable(False, False)

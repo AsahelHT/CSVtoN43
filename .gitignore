@@ -185,3 +185,6 @@ deploy/
 *.json
 .json
 *.zip
+
+CSVtoN43.build
+CSVtoN43.dist

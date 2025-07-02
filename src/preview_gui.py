@@ -15,7 +15,7 @@ from tkinter import RIGHT, LEFT, Y, BOTH
 from datetime import datetime
 from decimal import Decimal
 
-from app import ventanas_abiertas
+from app import ventanas_abiertas, ruta_icono
 
 import unicodedata
 
@@ -157,7 +157,7 @@ def mostrar_previsualizacion(parent, config):
     preview_win.title("🔍 Previsualización de la conversión")
     preview_win.geometry("1200x800")
     preview_win.minsize(1200, 800)
-    preview_win.iconbitmap(obtener_ruta_icono())
+    preview_win.iconbitmap(ruta_icono)
     preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy()))
     # Contenedor principal
     

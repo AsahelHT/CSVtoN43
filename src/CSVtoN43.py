@@ -15,7 +15,9 @@ import sys
 os.environ["NUMPY_EXPERIMENTAL_ARRAY_FUNCTION"] = "0"
 os.environ["OMP_NUM_THREADS"] = "1"
 
-from app import ventanas_abiertas
+from app import ventanas_abiertas, ruta_icono
+
+
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
@@ -64,7 +66,8 @@ def iniciar_aplicacion():
     app = ttk.Window(title="CSVtoN43", themename=tema_actual["nombre"])
     
     app.geometry("500x250")
-    app.iconbitmap(obtener_ruta_icono())
+    app.iconbitmap(ruta_icono)
+
 
     app.resizable(False, False)
     ventanas_abiertas["root"] = app
@@ -136,9 +139,9 @@ def iniciar_aplicacion():
         # Llama a sí misma cada 1000 ms (1 segundo)
         app.after(500, comprobar_configuracion)
 
-    #if not existe_config:
-    #    comprobar_configuracion()  
-    #    mostrar_configuracion(app, config, None)
+    if not existe_config:
+        comprobar_configuracion()  
+        mostrar_configuracion(app, config, None)
 
     comprobar_configuracion()  
     app.mainloop()
