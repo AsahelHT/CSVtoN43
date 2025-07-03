@@ -1,5 +1,5 @@
 
-# CSVtoN43 (README WIP)
+# CSVtoN43
 
 **CSVtoN43** es una aplicación de escritorio desarrollada en Python que permite convertir archivos bancarios en formato CSV a **Norma 43 (AEB43)**, el estándar español para el intercambio de extractos bancarios entre empresas y entidades financieras.
 
@@ -44,7 +44,7 @@ Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de mo
 Puede accerderse a la ventana de configuración mediante el botón **⚙️** y a la información de la app mediante el botón **ℹ️**.
 
 - Interfaz principal
-  ![pantalla principal](assets/main_wd.png)
+  ![pantalla principal](images/main_wd.png)
 
 ### 2. Configurar campos
 La primera vez, se abrirá automáticamente la **ventana de configuración**, donde deberás seleccionar un fichero CSV como plantilla.
@@ -57,7 +57,7 @@ De este fichero CSV se realizará automáticamente:
 En esta ventana también puede modificarse la plantilla usada, abriendo el editor que el sistema tenga establecido por defecto para ficheros .csv, o cambiar la plantilla por otro fichero deseado.
 
 - Vista de configuración de campos  
-  ![configuración](assets/cfg_wd.png)
+  ![configuración](images/cfg_wd.png)
 
 
 ### 3. Previsualizar conversión
@@ -68,7 +68,7 @@ Antes de guardar, podrás ver una **previsualización** que:
 - Para convertir. Pulsa **“CONVERTIR”**.
 
 - Ejemplo de previsualización con colores  
-  ![previsualización](assets/prev_wd.png)
+  ![previsualización](images/prev_wd.png)
 
 ### 4. Exportar a Norma 43
 Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El nombre se generará automáticamente y se te ofrecerá una ubicación para guardarlo.
