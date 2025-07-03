@@ -1,4 +1,9 @@
-# 🧾 **CSVtoN43**  
+# 🧾 **CSVtoN43**  <
+
+p align="center">
+  <img src="src/assets/csv2n43.ico" width="100" alt="CSVtoN43 Icon">
+</p>
+
 Conversor de archivos CSV al formato bancario **Norma 43 (AEB43)**.
 
 ---
