@@ -20,7 +20,7 @@ Conversor de archivos CSV al formato bancario **Norma 43 (AEB43)**.
 
 ## 📦 Última versión
 
-> 🆕 **Versión actual: 1.2.0 - Julio 2025**  
+> 🆕 **Versión actual: Build v3-030725**  
 > - Nueva previsualización coloreada.  
 > - Mejoras de rendimiento.  
 > - Soporte para múltiples tipos de CSV.  
