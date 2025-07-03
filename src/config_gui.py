@@ -17,8 +17,8 @@ BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath((os.path.dirname(__file__)))
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
+        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
 
 CONFIG_FILE = os.path.join(BASE_DIR, 'CSVtoN43_CFG.json')
 

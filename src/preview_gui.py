@@ -91,8 +91,8 @@ def mapear_colores_desde_config(config, colores):
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
+        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
 
 def hay_campos_sin_asignar(config):
     for clave in config:

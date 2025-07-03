@@ -24,7 +24,7 @@
 
 ```text
 CSVtoN43/
-├── media/                          # Recursos gráficos como iconos, logotipos, etc.
+├── assets/                          # Recursos gráficos como iconos, logotipos, etc.
 │   └── icon.ico                    # Icono de la aplicación para PyInstaller.
 ├── src/                            # Recursos gráficos como iconos, logotipos, etc.
 │   ├── CSVtoN43_CFG.json           # Configuración base utilizada si no hay ajustes previos del usuario.
@@ -42,10 +42,10 @@ CSVtoN43/
 
 ### 1. Cargar un archivo CSV
 Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de movimientos bancarios. 
-Puede accerderse a la ventana de configuración mediante el botón **⚙️** y a la información de la app mediante el botón **ℹ️**.
+Puede accerderse a la ventana de configuración assetsnte el botón **⚙️** y a la información de la app assetsnte el botón **ℹ️**.
 
 - Interfaz principal
-  ![pantalla principal](media/main_wd.png)
+  ![pantalla principal](assets/main_wd.png)
 
 ### 2. Configurar campos
 La primera vez, se abrirá automáticamente la **ventana de configuración**, donde deberás seleccionar un fichero CSV como plantilla.
@@ -58,7 +58,7 @@ De este fichero CSV se realizará automáticamente:
 En esta ventana pueden 
 
 - Vista de configuración de campos  
-  ![configuración](media/cfg_wd.png)
+  ![configuración](assets/cfg_wd.png)
 
 
 ### 3. Previsualizar conversión
@@ -69,7 +69,7 @@ Antes de guardar, podrás ver una **previsualización** que:
 - Para convertir. Pulsa **“CONVERTIR”**.
 
 - Ejemplo de previsualización con colores  
-  ![previsualización](media/prev_wd.png)
+  ![previsualización](assets/prev_wd.png)
 
 ### 4. Exportar a Norma 43
 Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El nombre se generará automáticamente y se te ofrecerá una ubicación para guardarlo.
@@ -93,11 +93,11 @@ pip install -r requirements.txt
 Si quieres generar un ejecutable `.exe` para Windows:
 
 ```bash
-pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../media/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "../media/csv2n43.ico;media"
+pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../assets/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "../assets/csv2n43.ico;assets"
 
 ```
 ```bash
-python -m nuitka --standalone --enable-plugin=tk-inter --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=../media/csv2n43.ico=media/csv2n43.ico  --windows-icon-from-ico=../media/csv2n43.ico CSVtoN43.py                
+python -m nuitka --standalone --enable-plugin=tk-inter --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=../assets/csv2n43.ico=assets/csv2n43.ico --windows-console-mode=disable --windows-icon-from-ico=../assets/csv2n43.ico CSVtoN43.py                
 
 ---
 

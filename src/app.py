@@ -10,13 +10,14 @@ ventanas_abiertas = {
 }
 
 def ruta_recurso(rel_path):
-    """Obtiene la ruta correcta al recurso, tanto si está empaquetado como si no"""
-    if hasattr(sys, '_MEIPASS'):  # usado por PyInstaller, pero también útil con Nuitka
+    """Devuelve la ruta absoluta a un recurso."""
+    if hasattr(sys, '_MEIPASS'):  # PyInstaller/Nuitka modo empaquetado
         base_path = sys._MEIPASS
-    elif getattr(sys, 'frozen', False):
+    elif getattr(sys, 'frozen', False):  # PyInstaller onefile
         base_path = os.path.dirname(sys.executable)
-    else:
-        base_path = os.path.abspath(".")
+    else:  # Ejecución normal: usar ruta del script
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        base_path = os.path.abspath(os.path.join(base_path, ".."))  # Subir un nivel si estás en /src
     return os.path.join(base_path, rel_path)
 
-ruta_icono = ruta_recurso(os.path.join("media", "csv2n43.ico"))
+ruta_icono = ruta_recurso(os.path.join("assets", "csv2n43.ico"))

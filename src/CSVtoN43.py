@@ -4,6 +4,7 @@
 
 import ttkbootstrap as ttk
 import tkinter as tk
+from tkinter import filedialog, messagebox
 from ttkbootstrap.constants import *
 from config_gui import cargar_config, mostrar_configuracion, CONFIG_FILE, guardar_config
 from info_gui import mostrar_informacion
@@ -12,17 +13,19 @@ from preview_gui import mostrar_previsualizacion
 import os
 import sys
 
-os.environ["NUMPY_EXPERIMENTAL_ARRAY_FUNCTION"] = "0"
-os.environ["OMP_NUM_THREADS"] = "1"
+if "NUITKA_LAUNCH_TOKEN" in os.environ:
+   messagebox.showerror("Error", "Ya existe otra instancia de esta aplicación")
+   sys.exit(1)
+
+os.environ["NUITKA_LAUNCH_TOKEN"] = "1"
 
 from app import ventanas_abiertas, ruta_icono
 
 
-
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
+        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
 
 def hay_campos_sin_asignar(config):
     for clave in config:
@@ -45,20 +48,25 @@ def iniciar_aplicacion():
         tema_en_cooldown["estado"] = False
         actualizar_estado_boton_tema()
 
-    def cambiar_tema():
+    def cambiar_tema(app,btn):
         nuevo_tema = "flatly" if tema_actual["nombre"] == "darkly" else "darkly"
         app.style.theme_use(nuevo_tema)
         tema_actual["nombre"] = nuevo_tema
-        btn_tema.config(text="🌞" if nuevo_tema == "darkly" else "🌙")
+        btn.config(text="🌞" if nuevo_tema == "darkly" else "🌙")
         
         config['tema'] = nuevo_tema
         guardar_config(config)
-        # Activar cooldown
-        tema_en_cooldown["estado"] = True
-        actualizar_estado_boton_tema()
+        
+        # Reiniciar la aplicación
+        if "NUITKA_LAUNCH_TOKEN" in os.environ:
+            del os.environ["NUITKA_LAUNCH_TOKEN"]
+
+        app.destroy()
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
+
 
     config, existe_config = cargar_config()
-
 
     tema_actual = {"nombre": config.get("tema", "darkly")} 
     tema_en_cooldown = {"estado": False} 
@@ -68,14 +76,13 @@ def iniciar_aplicacion():
     app.geometry("500x250")
     app.iconbitmap(ruta_icono)
 
-
     app.resizable(False, False)
     ventanas_abiertas["root"] = app
     # Frame superior para botones info y configuración
     top_frame = ttk.Frame(app)
     top_frame.pack(anchor="ne", pady=10, padx=10)
 
-    btn_info = ttk.Button(top_frame, text="ℹ️", width=1, bootstyle="info-outline", command= mostrar_informacion)
+    btn_info = ttk.Button(top_frame, text="ℹ️", width=1, bootstyle="info-outline", command=mostrar_informacion)
     btn_info.pack(side="left", padx=5)
 
     # Estilo o advertencia en el botón de configuración si hay campos sin asignar
@@ -99,7 +106,7 @@ def iniciar_aplicacion():
     bottom_frame = ttk.Frame(app)
     bottom_frame.pack(side="bottom", fill="x", pady=5, padx=10)
 
-    btn_tema = ttk.Button(bottom_frame,text="🌞" if config['tema'] == "darkly" else "🌙", width=3, bootstyle="secondary-outline", command=cambiar_tema)
+    btn_tema = ttk.Button(bottom_frame,text="🌞" if config['tema'] == "darkly" else "🌙", width=3, bootstyle="secondary-outline", command=lambda:cambiar_tema(app,btn_tema))
     btn_tema.pack(side="left")
 
 

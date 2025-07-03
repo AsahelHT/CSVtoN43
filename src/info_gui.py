@@ -10,8 +10,8 @@ from app import ventanas_abiertas, ruta_icono
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'media', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'media', 'csv2n43.ico')
+        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
+    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
 
 def mostrar_informacion():
 
@@ -51,7 +51,7 @@ def mostrar_informacion():
         "Autor: Asahel Hernández Torné\n"
         "Contacto: asahel.dev@gmail.com\n"
         "\n"
-        "Versión: Build v2.2-020725\n"
+        "Versión: Build v2.2-030725\n"
         "Python: 3.10.8\n"
         "Licencia: GPL-3.0 license\n"
     )
