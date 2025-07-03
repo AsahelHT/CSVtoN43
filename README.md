@@ -118,9 +118,9 @@ Pulsa **“Guardar archivo Norma 43”**:
 
 ---
 
-## 🧑‍💻 Requisitos técnicos
+## 💻 Requisitos técnicos
 
-- 📌 Python **3.10.8**
+- 🐍 Python **3.10.8**
 - 💻 Sistema operativo: **Windows**
 - 📦 Instalación de dependencias:
 
