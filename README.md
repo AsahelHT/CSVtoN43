@@ -1,8 +1,11 @@
-# 🧾 **CSVtoN43**  <
+# 🧾 **CSVtoN43**  
 
-p align="center">
+
+<p align="center">
   <img src="src/assets/csv2n43.ico" width="100" alt="CSVtoN43 Icon">
 </p>
+
+
 
 Conversor de archivos CSV al formato bancario **Norma 43 (AEB43)**.
 
@@ -73,7 +76,7 @@ Al iniciar la aplicación:
 📌 **Nota:** Si es la primera vez que usas la aplicación, se abrirá automáticamente la ventana de configuración para insertar una plantilla.
 
 📷 *Interfaz principal:*  
-![pantalla principal](images/main_wd.png)
+![pantalla principal](images/main_wind.png)
 
 ---
 
@@ -89,7 +92,7 @@ Selecciona un archivo CSV como plantilla. El sistema:
 > Usa CSVs con encabezados bien nombrados para una configuración más rápida.
 
 📷 *Configuración de campos:*  
-![configuración](images/cfg_wd.png)
+![configuración](images/cfg_wind.png)
 
 ---
 
@@ -106,7 +109,7 @@ Antes de exportar puedes:
 > Colores iguales = mismo campo = mayor seguridad de correspondencia.
 
 📷 *Ejemplo de previsualización:*  
-![previsualización](images/prev_wd.png)
+![previsualización](images/prev_wind.png)
 
 ---
 
