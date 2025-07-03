@@ -1,85 +1,128 @@
-
-# CSVtoN43
-
-**CSVtoN43** es una aplicación de escritorio desarrollada en Python que permite convertir archivos bancarios en formato CSV a **Norma 43 (AEB43)**, el estándar español para el intercambio de extractos bancarios entre empresas y entidades financieras.
+# 🧾 **CSVtoN43**  
+Conversor de archivos CSV al formato bancario **Norma 43 (AEB43)**.
 
 ---
 
 ## 🧩 Funcionalidad principal
 
-- 🗃️ **Carga de archivos CSV** con información de movimientos bancarios.
-- ⚙️ **Configuración interactiva de columnas** para adaptar el CSV al formato esperado (asociar campos como fecha operación, concepto, importe, saldo, etc.).
+- 🗃️ **Carga de archivos CSV** con movimientos bancarios.
+- ⚙️ **Configuración interactiva de columnas** (fecha, importe, concepto…).
 - 💱 **Selección de divisa** con asignación automática del código ISO 4217.
-- 🧠 **Asignación automática de campos** al detectar nombres comunes como “fecha”, “importe”, “concepto”, etc.
-- 🎨 **Previsualización interactiva** del resultado con **colores identificativos** que muestran claramente la relación entre campos del CSV y el archivo generado en Norma 43.
-- 🔄 **Conversión a Norma 43 (AEB43)** siguiendo el estándar oficial de forma precisa y validada.
-- 📤 **Generación automática del nombre del archivo** exportado, evitando sobrescrituras y errores.
-- 💾 **Soporte para múltiples tipos de CSV**, incluyendo distintos separadores, codificaciones y estructuras.
-- 🧪 **Etapa de validación** para detectar errores en los datos antes de la exportación.
-- 🌙 **Cambio de tema**: entre tema oscuro o tema claro para mejor visualización.
+- 🧠 **Detección automática de campos comunes** como “fecha”, “importe”, “concepto”, etc.
+- 🎨 **Previsualización con colores** para ver la equivalencia entre CSV y Norma 43.
+- 🔄 **Conversión precisa a Norma 43**, conforme al estándar oficial.
+- 📤 **Nombre automático del archivo exportado**, evitando sobrescrituras.
+- 💾 **Compatibilidad con múltiples formatos de CSV** (separadores, codificación...).
+- 🧪 **Validación de datos previa a la conversión** para evitar errores.
+- 🌙 **Soporte de tema claro/oscuro** para mejor visualización.
 
 ---
 
-## 📁 Estructura del proyecto
+## 📦 Última versión
+
+> 🆕 **Versión actual: 1.2.0 - Julio 2025**  
+> - Nueva previsualización coloreada.  
+> - Mejoras de rendimiento.  
+> - Soporte para múltiples tipos de CSV.  
+> - Configuración desacoplada y persistente.
+
+---
+
+## 🗂️ Estructura del proyecto
 
 ```text
 📁 CSVtoN43/
-├── 📁 src/           
-│   ├── 🖼️ assets/            # Recursos gráficos como iconos, logotipos, etc.
-│   │   └── 🖼️ csv2n43.ico    # Icono de la aplicación para PyInstaller.                 
-│   ├── ⚙️ CSVtoN43_CFG.json  # Configuración base utilizada si no hay ajustes previos del usuario.
-│   ├── 🔄 converter.py       # Lógica de conversión de datos desde CSV a Norma 43.
-│   ├── 🖥️ CSVtoN43.py        # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
-│   ├── 👁️ preview_gui.py     # Ventana de previsualización con coloreado y comparación de datos.
-│   ├── 🛠️ config_gui.py      # Ventana de configuración de columnas y campos del CSV.
-│   ├── 🧩 csv2n43_utils.py   # Funciones globales y auxiliares para manejo de fechas, nombres, formatos, etc.
-│   └── 📦 requirements.txt   # Librerías necesarias para ejecutar el proyecto.
-└── 📄 README.md              # Este archivo.
+├── 📁 images/
+│   ├── 🖼️ cfg_wd.png
+│   ├── 🖼️ main_wd.png
+│   └── 🖼️ prev_wd.png
+│
+├── 📁 src/
+│   ├── 📁 assets/                # Recursos gráficos como iconos, logotipos, etc.
+│   │   └── 🖼️csv2n43.ico         # Icono de la aplicación
+│   ├── 🛠️ config_gui.py          # Ventana de configuración de columnas y campos del CSV.
+│   ├── 🔄 converter.py           # Lógica de conversión de datos desde CSV a Norma 43.
+│   ├── 🧩 csv2n43_utils.py       # Funciones auxiliares para manejo de fechas, nombres, formatos, etc.
+│   ├── ⚙️ CSVtoN43_CFG.json      # Configuración de la aplicación.
+│   ├── 🖥️ CSVtoN43.py            # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
+│   ├── 📄 dist_README.md
+│   ├── ℹ️ info_gui.py            # Ventana de información
+│   ├── 👁️ preview_gui.py         # Ventana de previsualización con coloreado y comparación de datos.
+│   └── 📄 requirements.txt       # Librerías necesarias para ejecutar el proyecto.
+│
+└── 📄 README.md
 ```
-
-## 📖 Manual de usuario
-
-### 1. Cargar un archivo CSV
-Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de movimientos bancarios. 
-Puede accerderse a la ventana de configuración mediante el botón **⚙️** y a la información de la app mediante el botón **ℹ️**.
-
-- Interfaz principal
-  ![pantalla principal](images/main_wd.png)
-
-### 2. Configurar campos
-La primera vez, se abrirá automáticamente la **ventana de configuración**, donde deberás seleccionar un fichero CSV como plantilla.
-De este fichero CSV se realizará automáticamente:
-- Asignar cada columna del CSV a su campo correspondiente (fecha, importe, concepto…).
-- Confirmar el tipo de separador (coma, punto y coma, etc.) si no se detecta automáticamente.
-
-💡 *Si el CSV incluye nombres estándar como `fecha`, `importe`, `concepto`, se asignarán automáticamente.*
-
-En esta ventana también puede modificarse la plantilla usada, abriendo el editor que el sistema tenga establecido por defecto para ficheros .csv, o cambiar la plantilla por otro fichero deseado.
-
-- Vista de configuración de campos  
-  ![configuración](images/cfg_wd.png)
-
-
-### 3. Previsualizar conversión
-Antes de guardar, podrás ver una **previsualización** que:
-- Muestra las 7 primeras líneas del CSV original.
-- Presenta las 5 primeras y 2 últimas líneas del fichero generado en Norma 43.
-- Colorea los campos para facilitar la correspondencia entre ambos formatos.
-- Para convertir. Pulsa **“CONVERTIR”**.
-
-- Ejemplo de previsualización con colores  
-  ![previsualización](images/prev_wd.png)
-
-### 4. Exportar a Norma 43
-Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El nombre se generará automáticamente y se te ofrecerá una ubicación para guardarlo.
 
 ---
 
-## 🧑‍💻 Requisitos
+## 📖 Manual de usuario
 
-- Python 3.10.8
-- Sistema operativo: Windows
-- Dependencias:
+---
+
+### 🔹 1. Cargar archivo CSV
+
+Al iniciar la aplicación:
+- Pulsa **“EMPEZAR”** para seleccionar tu fichero CSV.
+- Accede a la **configuración** mediante el botón ⚙️ o a la **información** con ℹ️.
+
+📌 **Nota:** Si es la primera vez que usas la aplicación, se abrirá automáticamente la ventana de configuración para insertar una plantilla.
+
+📷 *Interfaz principal:*  
+![pantalla principal](images/main_wd.png)
+
+---
+
+### 🔹 2. Configurar campos (ventana ⚙️)
+
+Selecciona un archivo CSV como plantilla. El sistema:
+
+✅ **Detecta automáticamente campos conocidos** (`fecha`, `importe`, `concepto`, etc.)  
+✅ Permite **editar o cambiar la plantilla CSV** desde tu editor predeterminado  
+✅ Detecta el **separador** automáticamente (coma, punto y coma...)
+
+🟦 **Consejo:**  
+> Usa CSVs con encabezados bien nombrados para una configuración más rápida.
+
+📷 *Configuración de campos:*  
+![configuración](images/cfg_wd.png)
+
+---
+
+### 🔹 3. Previsualizar conversión
+
+Antes de exportar puedes:
+
+- Ver las **7 primeras líneas del CSV original**
+- Comprobar las **5 primeras y 2 últimas del archivo Norma 43**
+- Colores que **vinculan visualmente los campos CSV ↔ Norma 43**
+- Botón **“CONVERTIR”** para proceder a la generación
+
+🟩 **Tip visual:**  
+> Colores iguales = mismo campo = mayor seguridad de correspondencia.
+
+📷 *Ejemplo de previsualización:*  
+![previsualización](images/prev_wd.png)
+
+---
+
+### 🔹 4. Exportar archivo Norma 43
+
+Pulsa **“Guardar archivo Norma 43”**:
+
+✅ Se genera el nombre automáticamente  
+✅ Evita sobrescrituras  
+✅ Puedes elegir la ubicación de guardado
+
+🟥 **Aviso:**  
+> Asegúrate de que todos los campos estén correctamente mapeados antes de exportar.
+
+---
+
+## 🧑‍💻 Requisitos técnicos
+
+- 📌 Python **3.10.8**
+- 💻 Sistema operativo: **Windows**
+- 📦 Instalación de dependencias:
 
 ```bash
 pip install -r requirements.txt
@@ -87,26 +130,26 @@ pip install -r requirements.txt
 
 ---
 
-## 🛠️ Compilación con Nuitka o Pyinstaller (opcional)
+## 🛠️ Compilación (opcional)
 
-Si quieres generar un ejecutable `.exe` para Windows:
+### 📦 Usando **PyInstaller**
 
 ```bash
 pyinstaller --noconsole --noconfirm --onedir --windowed --icon=assets/csv2n43.ico --name=CSVtoN43 CSVtoN43.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "assets/csv2n43.ico;assets"
-
 ```
+
+### 📦 Usando **Nuitka**
+
 ```bash
-python -m nuitka --standalone --enable-plugin=tk-inter --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=assets/csv2n43.ico=assets/csv2n43.ico --include-data-file=dist_README.md=dist_README.md  --windows-console-mode=disable --windows-icon-from-ico=assets/csv2n43.ico CSVtoN43.py                
+python -m nuitka --standalone --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=assets/csv2n43.ico=assets/csv2n43.ico --windows-console-mode=disable --windows-icon-from-ico=assets/csv2n43.ico CSVtoN43.py
+```
 
 ---
 
-## 📌 Estado del desarrollo
+## 🔍 Estado del desarrollo
 
-- ✅ Funcionalidad básica estable.
-- ⚙️ Mejora continua en la usabilidad y validación.
-- 🧪 Pruebas con CSV de diferentes entidades bancarias.
-
----
-
-
-
+| Estado        | Descripción                                           |
+|---------------|--------------------------------------------------------|
+| ✅ Estable     | Funcionalidad básica completa y validada               |
+| 🔧 En progreso | Mejoras de interfaz y validación automática de campos |
+| 🧪 Testeo      | Con diferentes CSV reales de bancos españoles         |
