@@ -4,13 +4,8 @@ import os
 from datetime import datetime
 from decimal import Decimal
 from tkinter import filedialog, messagebox
-from config_gui import guardar_config
 
-def formatea_texto(texto, longitud):
-    return texto.upper().strip().ljust(longitud)[:longitud]
-
-def normaliza_importe(importe):
-    return str((Decimal(importe).quantize(Decimal("0.01")) * 100).to_integral_value()).zfill(14)
+import csv2n43_utils as utils
 
 def convertir_con_archivo_existente(config, csv_file, lineas_n43):
     if not os.path.isfile(csv_file):
@@ -67,7 +62,7 @@ def convertir_con_archivo_existente(config, csv_file, lineas_n43):
 
     config['last_csv_path'] = os.path.dirname(csv_file)
     config['last_output_path'] = os.path.dirname(output_file)
-    guardar_config(config)
+    utils.guardar_config(config)
     guardar_norma43(lineas_n43,output_file)
     
     messagebox.showinfo("Conversión completada", f"Archivo guardado en:\n{output_file}")
@@ -159,7 +154,7 @@ def generar_norma43_temp(csv_file, config):
     saldo_inicial = primer_mov['saldo'] - primer_mov['importe']
 
     saldo_tipo = '2' if saldo_inicial >= 0 else '1'
-    importe_saldo = normaliza_importe(abs(saldo_inicial))
+    importe_saldo = utils.normaliza_importe(abs(saldo_inicial))
     divisa = config.get('divisa_codigo', '978')
 
     modalidad = '3'
@@ -178,7 +173,7 @@ def generar_norma43_temp(csv_file, config):
     lineas = []
 
     # Cabecera 11
-    linea_11 = f"11{entidad}{oficina}{cuenta}{fecha_inicio}{fecha_fin}{saldo_tipo}{importe_saldo}{divisa}{modalidad}{formatea_texto(config['nombre_empresa'], 36)}"
+    linea_11 = f"11{entidad}{oficina}{cuenta}{fecha_inicio}{fecha_fin}{saldo_tipo}{importe_saldo}{divisa}{modalidad}{utils.formatea_texto(config['nombre_empresa'], 36)}"
     lineas.append(linea_11[:80])
     
     for mov in movimientos:
@@ -199,7 +194,7 @@ def generar_norma43_temp(csv_file, config):
             ncargos += 1
   
         # Comienza a construir la línea base (sin las referencias todavía)
-        base_linea_22 = f"22    {oficina}{fecha}{fecha_valor}{concepto_comun}{concepto_propio}{importe_tipo}{normaliza_importe(abs(importe))}{n_documento}"
+        base_linea_22 = f"22    {oficina}{fecha}{fecha_valor}{concepto_comun}{concepto_propio}{importe_tipo}{utils.normaliza_importe(abs(importe))}{n_documento}"
 
         # Calcular cuántos caracteres hay ya en la línea 22
         long_actual = len(base_linea_22)
@@ -211,23 +206,23 @@ def generar_norma43_temp(csv_file, config):
         if ref1 or ref2:
             if len(ref1 + ref2) <= espacio_restante:
                 # Caben ambas referencias
-                refs_combinadas = formatea_texto(ref1 + ref2, espacio_restante)
+                refs_combinadas = utils.formatea_texto(ref1 + ref2, espacio_restante)
                 linea_22 = base_linea_22 + refs_combinadas
-                lineas_extra.append(f"2301{formatea_texto(concepto, 60)}"[:80])
+                lineas_extra.append(f"2301{utils.formatea_texto(concepto, 60)}"[:80])
             else:
                 # Solo cabe ref1 o parte de ref1 en la línea 22
-                ref1_cortada = formatea_texto(ref1, espacio_restante)
+                ref1_cortada = utils.formatea_texto(ref1, espacio_restante)
                 linea_22 = base_linea_22 + ref1_cortada
                 if ref2:
-                    lineas_extra.append(f"2301{formatea_texto(ref2, 60)}"[:80])
-                    lineas_extra.append(f"2302{formatea_texto(concepto, 60)}"[:80])
+                    lineas_extra.append(f"2301{utils.formatea_texto(ref2, 60)}"[:80])
+                    lineas_extra.append(f"2302{utils.formatea_texto(concepto, 60)}"[:80])
                 else:
-                    lineas_extra.append(f"2301{formatea_texto(concepto, 60)}"[:80])
+                    lineas_extra.append(f"2301{utils.formatea_texto(concepto, 60)}"[:80])
         else:
             # No hay referencias, se rellenan con ceros
             refs_vacias = '0' * espacio_restante
             linea_22 = base_linea_22 + refs_vacias
-            lineas_extra.append(f"2301{formatea_texto(concepto, 60)}"[:80])
+            lineas_extra.append(f"2301{utils.formatea_texto(concepto, 60)}"[:80])
 
         # Añadir las líneas finales
         lineas.append(linea_22[:80])
@@ -237,7 +232,7 @@ def generar_norma43_temp(csv_file, config):
         tipo_saldo_final = '2' if saldo_final >= 0 else '1'
 
     # Línea 33 - Totales
-    linea_33 = f"33{entidad}{oficina}{cuenta}{str(ncargos).zfill(5)}{normaliza_importe(cargos)}{str(nabonos).zfill(5)}{normaliza_importe(abonos)}{tipo_saldo_final}{normaliza_importe(saldo_final)}{divisa}"
+    linea_33 = f"33{entidad}{oficina}{cuenta}{str(ncargos).zfill(5)}{utils.normaliza_importe(cargos)}{str(nabonos).zfill(5)}{utils.normaliza_importe(abonos)}{tipo_saldo_final}{utils.normaliza_importe(saldo_final)}{divisa}"
     lineas.append(linea_33[:80])
     
     # Línea 88 - Fin de fichero

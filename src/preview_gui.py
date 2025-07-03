@@ -1,108 +1,25 @@
-from tkinter import ttk, TclError
-from tkinter import Toplevel, Text, Scrollbar, BOTH, Y, RIGHT, LEFT, END, CENTER, filedialog, messagebox, Frame, Label
-from ttkbootstrap import LabelFrame, Treeview, Scrollbar, Button, Style
-import pandas as pd
-from conversor import generar_norma43_temp 
-from config_gui import cargar_config, mostrar_configuracion, SUGERENCIAS_COLUMNAS
-from conversor import convertir_con_archivo_existente
-from ttkbootstrap.widgets import Treeview
 import os
 import sys
-import csv
+import pandas as pd
 
-from tkinter import Text, Scrollbar, messagebox
-from tkinter import RIGHT, LEFT, Y, BOTH
+from tkinter import ttk, TclError
+from tkinter import Toplevel, Text, Scrollbar, BOTH, Y, RIGHT, LEFT, END, filedialog, messagebox, Frame, Label
+from ttkbootstrap import LabelFrame, Treeview, Scrollbar, Button, Style
+
+from converter import generar_norma43_temp 
+from config_gui import mostrar_configuracion
+from converter import convertir_con_archivo_existente
+from ttkbootstrap.widgets import Treeview
+
 from datetime import datetime
 from decimal import Decimal
 
-from app import ventanas_abiertas, ruta_icono
+from csv2n43_utils import ventanas_abiertas, ruta_icono, show_ico_warn
 
-import unicodedata
+import csv2n43_utils as utils
 
-# Colores por campo
-colores = {
-    'codigo':"#18B01F",
-    'cuenta':"#0088ff",
-    'fecha operacion': '#ff6b6b',    
-    'fecha valor': '#61dafb',     
-    'concepto': '#a3e635',  
-    'importe': '#facc15',   
-    'saldo': "#ff7c01",     
-    'referencia 1': '#c084fc',      
-    'referencia 2': '#c084fc',       
-    'divisa':"#00ffbb",
-    'tipo importe':"#00ff00",
-    'contadores':"#ff0000"
-}
-
-def validar_estructura_csv(config, archivo):
-    sep_config = config.get("sep", ";")
-    columnas_esperadas = [
-        config.get(k) for k in SUGERENCIAS_COLUMNAS if config.get(k) != "Sin asignar"
-    ]
-
-    if not archivo or not os.path.isfile(archivo):
-        return False, "No se ha encontrado el archivo CSV configurado."
-
-    try:
-        # Leer primeras líneas del CSV
-        with open(archivo, "r", encoding="utf-8") as f:
-            sample = f.read(2048)
-            try:
-                sep_detectado = csv.Sniffer().sniff(sample).delimiter
-            except:
-                sep_detectado = ';' if ';' in sample else ','
-
-        if sep_detectado != sep_config:
-            return False, f"El separador detectado ('{sep_detectado}') no coincide con el configurado ('{sep_config}')."
-
-        df = pd.read_csv(archivo, sep=sep_detectado, nrows=1)
-        columnas_csv = [col.strip().lower() for col in df.columns]
-        columnas_requeridas = [col.lower().strip() for col in columnas_esperadas]
-
-        for columna in columnas_requeridas:
-            if columna not in columnas_csv:
-                return False, f"Falta la columna '{columna}' en el archivo CSV."
-
-        return True, "El archivo coincide con la configuración."
-    except Exception as e:
-        return False, f"Error al comprobar el archivo CSV:\n{e}"
-
-
-def normalizar(nombre):
-    nombre = nombre.strip().lower().replace(" ", "").replace("_", "").replace("-", "")
-    nombre = unicodedata.normalize('NFKD', nombre).encode('ascii', 'ignore').decode('utf-8')
-    return nombre
-
-def mapear_colores_desde_config(config, colores):
-    colores_por_columna = {}
-
-    for campo, nombre_columna in config.items():
-        if campo in ['nombre_empresa', 'sep', 'last_csv_path', 'last_csv_file', 'last_output_path']:
-            continue
-
-        if nombre_columna == 'Sin asignar' or not nombre_columna.strip():
-            continue
-
-        color = colores.get(campo, "#e0e0e0")
-        colores_por_columna[normalizar(nombre_columna)] = color  # clave normalizada
-
-    return colores_por_columna
-
-def obtener_ruta_icono():
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
-
-def hay_campos_sin_asignar(config):
-    for clave in config:
-        if clave not in ("referencia 1", "referencia 2"):
-            if config[clave] == "Sin asignar":
-                return True
-    return False
 
 def mostrar_previsualizacion(parent, config):
-
     def on_convertir(lineas_n43):
         convertir_con_archivo_existente(config, archivo, lineas_n43)
         preview_win.destroy()
@@ -113,7 +30,7 @@ def mostrar_previsualizacion(parent, config):
         return
     
     #boton_inicio.config(state="disabled")
-    config, existe_config = cargar_config()
+    config, existe_config = utils.cargar_config()
 
     if not existe_config:
         messagebox.showerror("No existe configuración guardada", "Porfavor, guarde una configuración.")
@@ -121,7 +38,7 @@ def mostrar_previsualizacion(parent, config):
             parent.after(100, lambda: mostrar_configuracion(parent, config, None))
         return
         
-    if hay_campos_sin_asignar(config):
+    if utils.hay_campos_sin_asignar(config):
         messagebox.showerror("Existen campos obligatorios sin asignar", "Porfavor, revise la configuración.")
         if parent:
             parent.after(100, lambda: mostrar_configuracion(parent, config, None))
@@ -135,7 +52,7 @@ def mostrar_previsualizacion(parent, config):
     if not archivo:
         return
 
-    ok, mensaje = validar_estructura_csv(config, archivo)
+    ok, mensaje = utils.validar_estructura_csv(config, archivo)
     if not ok:
         respuesta = messagebox.askyesno(
             "Archivo incompatible",
@@ -153,11 +70,21 @@ def mostrar_previsualizacion(parent, config):
     preview_win = Toplevel()
     if not preview_win.winfo_exists():
         return
-    
+    preview_win.withdraw()
+    try:
+        preview_win.iconbitmap(ruta_icono)
+    except Exception as e:
+        if utils.show_ico_warn:
+            messagebox.showwarning("Archivo no encontrado", "No se encontró la imagen de icono de la aplicación: csv2n43.ico")
+            utils.show_ico_warn = False
+    preview_win.deiconify()
     preview_win.title("🔍 Previsualización de la conversión")
     preview_win.geometry("1200x800")
     preview_win.minsize(1200, 800)
-    preview_win.iconbitmap(ruta_icono)
+
+    
+        
+
     preview_win.protocol("WM_DELETE_WINDOW", lambda: (preview_win.destroy()))
     # Contenedor principal
     
@@ -202,7 +129,7 @@ def mostrar_previsualizacion(parent, config):
     )
     emoji_label.grid(row=0, column=0, sticky="nsew")        
     # --- Previsualización Norma43 ---
-    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="secondary")
+    frame_n43 = LabelFrame(container, text="📃 Previsualización Norma 43 (5 primeras y 2 últimas líneas)", bootstyle="primary")
     frame_n43.grid(row=3, column=0, sticky="nsew", padx=5, pady=5)
     
     lineas_n43 = generar_norma43_temp(archivo, config)
@@ -219,7 +146,6 @@ def mostrar_previsualizacion(parent, config):
         text="CONVERTIR",
         bootstyle="success",
         width=5,
-        style="TButton",
         command=lambda: on_convertir(lineas_n43)
     )
     boton_guardar.grid(row=0, column=0, sticky="nsew")
@@ -254,7 +180,7 @@ def mostrar_leyenda_popup(parent):
     scrollbar.pack(side=RIGHT, fill=Y)
     text.config(yscrollcommand=scrollbar.set)
 
-    for i, (campo, color) in enumerate(colores.items(), start=1):
+    for i, (campo, color) in enumerate(utils.colores.items(), start=1):
         # Línea con texto y espacios coloreables
         linea = f"{campo:<15}  {' '*5}\n\n"  # línea con doble salto para separar visualmente
         text.insert(END, linea)
@@ -288,10 +214,10 @@ def _mostrar_tabla_csv(frame, archivo, config):
         return
 
     columnas = list(df.columns)
-    colores_por_columna = mapear_colores_desde_config(config, colores)
+    colores_por_columna = utils.mapear_colores_desde_config(config, utils.colores)
 
     for i, col in enumerate(columnas):
-        col_norm = normalizar(col)  # normaliza el nombre del CSV
+        col_norm = utils.normalizar(col)  # normaliza el nombre del CSV
         color = colores_por_columna.get(col_norm, "#e0e0e0")
 
         subframe = Frame(frame)
@@ -335,7 +261,7 @@ def _mostrar_tabla_norma43(frame, lineas, parent=None):
    
     # Colores legibles en tema oscuro
 
-    for campo, color in colores.items():
+    for campo, color in utils.colores.items():
         text.tag_config(campo, foreground=color)
 
     try:

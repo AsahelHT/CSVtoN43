@@ -4,24 +4,27 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 import sys
 import os
+from tkinter import filedialog, messagebox
 
-from app import ventanas_abiertas, ruta_icono
-
-
-def obtener_ruta_icono():
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
+from csv2n43_utils import ventanas_abiertas, ruta_icono
+import csv2n43_utils as utils
 
 def mostrar_informacion():
-
     # Evitar duplicados
     if ventanas_abiertas.get("info") and ventanas_abiertas["info"].winfo_exists():
         ventanas_abiertas["info"].focus()
         return
 
     info_win = ttk.Toplevel()
-    info_win.iconbitmap(ruta_icono)
+    info_win.withdraw()
+    try:
+        info_win.iconbitmap(ruta_icono)
+    except Exception as e:
+        if utils.show_ico_warn:
+            messagebox.showwarning("Archivo no encontrado", "No se encontró la imagen de icono de la aplicación: csv2n43.ico")
+            utils.show_ico_warn = False
+
+    info_win.deiconify()
     info_win.title("Información de la aplicación")
     info_win.geometry("500x400")
     info_win.resizable(False, False)
@@ -51,7 +54,7 @@ def mostrar_informacion():
         "Autor: Asahel Hernández Torné\n"
         "Contacto: asahel.dev@gmail.com\n"
         "\n"
-        "Versión: Build v2.2-030725\n"
+        "Versión: Build v3-030725\n"
         "Python: 3.10.8\n"
         "Licencia: GPL-3.0 license\n"
     )

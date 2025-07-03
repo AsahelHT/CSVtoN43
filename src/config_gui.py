@@ -9,70 +9,11 @@ import pandas as pd
 import json
 import csv
 
-from app import ventanas_abiertas, ruta_icono
+from csv2n43_utils import ventanas_abiertas, ruta_icono
+import csv2n43_utils as utils
 
 ok = False
 
-BASE_DIR = getattr(sys, '_MEIPASS', os.path.abspath((os.path.dirname(__file__))))
-
-def obtener_ruta_icono():
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, 'assets', 'csv2n43.ico')
-    return os.path.join(os.path.dirname(__file__), '..', 'assets', 'csv2n43.ico')
-
-CONFIG_FILE = os.path.join(BASE_DIR, 'CSVtoN43_CFG.json')
-
-def cargar_config():
-    existe = os.path.exists(CONFIG_FILE)
-    if existe:
-        with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f), True
-    return {
-        'sep': '',
-        'fecha operacion': 'Sin asignar',
-        'fecha valor': 'Sin asignar',
-        'concepto': 'Sin asignar',
-        'importe': 'Sin asignar',
-        'cuenta': 'Sin asignar',
-        'saldo': 'Sin asignar',
-        'referencia 1': 'Sin asignar',
-        'referencia 2': 'Sin asignar',
-        'nombre_empresa': '',
-        'last_csv_path': '',
-        'last_csv_file': '',
-        'last_output_path': '',
-        'tema':'darkly'
-    }, False
-
-def guardar_config(config):
-    with open(CONFIG_FILE, 'w', encoding='utf-8') as f:
-        json.dump(config, f, indent=4)
-
-DIVISAS = {
-    'Euro (EUR)': '978',
-    'Dólar estadounidense (USD)': '840',
-    'Libra esterlina (GBP)': '826',
-    'Yen japonés (JPY)': '392',
-    'Yuan chino (CNY)': '156',
-}
-
-SUGERENCIAS_COLUMNAS = {
-    'fecha operacion': ['fecha operación', 'operacion', 'fecha operacion'],
-    'fecha valor': ['fecha valor', 'valor'],
-    'concepto': ['concepto', 'descripcion', 'descripción'],
-    'importe': ['importe', 'cantidad'],
-    'cuenta': ['cuenta', 'número cuenta'],
-    'saldo': ['saldo'],
-    'referencia 1': ['referencia1', 'ref1', 'referencia 1'],
-    'referencia 2': ['referencia2', 'ref2', 'referencia 2']
-}
-
-def hay_campos_sin_asignar(config):
-    for clave in config:
-        if clave not in ("referencia 1", "referencia 2"):
-            if config[clave] == "Sin asignar":
-                return True
-    return False
 
 def al_cerrar(parent, state):
     from json import dumps
@@ -86,7 +27,7 @@ def al_cerrar(parent, state):
         config[key] = var.get()
 
     # Comparar solo los campos relevantes
-    claves_relevantes = list(SUGERENCIAS_COLUMNAS.keys()) + ['sep', 'nombre_empresa', 'divisa_nombre']
+    claves_relevantes = list(utils.SUGERENCIAS_COLUMNAS.keys()) + ['sep', 'nombre_empresa', 'divisa_nombre']
     config_actual = {k: config.get(k) for k in claves_relevantes}
     config_guardado = {k: saved_config.get(k) for k in claves_relevantes}
 
@@ -110,7 +51,7 @@ def mostrar_configuracion(parent, config, archivo=None) :
         ventanas_abiertas["config"].focus()
         return
     
-    saved_config, _ = cargar_config()
+    saved_config, _ = utils.cargar_config()
     state = {
         'config': config,
         'saved_config': saved_config,
@@ -125,10 +66,10 @@ def mostrar_configuracion(parent, config, archivo=None) :
     if archivo != None:
         cambiar_plantilla_csv(state, archivo)
 
-    if not os.path.exists(CONFIG_FILE):
+    if not os.path.exists(utils.CONFIG_FILE):
         if not solicitar_csv(state):
             return False
-    if configuracion_vacia(state['config']):
+    if utils.configuracion_vacia(state['config']):
         if not solicitar_csv(state):
             return False
 
@@ -138,7 +79,13 @@ def mostrar_configuracion(parent, config, archivo=None) :
     window.title("⚙️ Configuración de campos")
     window.geometry("1500x700")
     window.minsize(1500, 700)
-    window.iconbitmap(ruta_icono)
+    try:
+        window.iconbitmap(ruta_icono)
+    except Exception as e:
+        if utils.show_ico_warn:
+            messagebox.showwarning("Archivo no encontrado", "No se encontró la imagen de icono de la aplicación: csv2n43.ico")
+            utils.show_ico_warn = False
+        
     window.protocol("WM_DELETE_WINDOW", lambda: al_cerrar(window, state))
     
     ventanas_abiertas["config"] = window
@@ -152,8 +99,7 @@ def mostrar_configuracion(parent, config, archivo=None) :
     crear_campos(state)
     crear_preview(state, archivo)
 
-def configuracion_vacia(config):
-    return not all(k in config for k in SUGERENCIAS_COLUMNAS)
+
 
 def solicitar_csv(state):
     respuesta = messagebox.askokcancel("Cargar plantilla CSV", "No se ha encontrado una configuración previa.\nSelecciona un archivo CSV para utilizar como plantilla.")
@@ -169,9 +115,9 @@ def solicitar_csv(state):
                 sample = f.read(2048)
                 sep_detectado = csv.Sniffer().sniff(sample).delimiter
                 state['config']['sep'] = sep_detectado
-            for clave in SUGERENCIAS_COLUMNAS:
+            for clave in utils.SUGERENCIAS_COLUMNAS:
                 state['config'][clave] = "Sin asignar"
-            guardar_config(state['config'])
+            utils.guardar_config(state['config'])
             return True
         else:
             return False
@@ -206,7 +152,7 @@ def leer_columnas_csv(state, archivo=None):
 
 def asignar_campos_automaticamente(config, columnas):
     columnas_csv = [col.strip().lower() for col in columnas]
-    for clave, sugeridos in SUGERENCIAS_COLUMNAS.items():
+    for clave, sugeridos in utils.SUGERENCIAS_COLUMNAS.items():
         for sugerido in sugeridos:
             if sugerido.lower() in columnas_csv:
                 idx = columnas_csv.index(sugerido.lower())
@@ -240,7 +186,7 @@ def crear_campos(state):
     etiquetas = {}
     combos = {}
 
-    for i, (key, _) in enumerate(SUGERENCIAS_COLUMNAS.items()):
+    for i, (key, _) in enumerate(utils.SUGERENCIAS_COLUMNAS.items()):
         label_text = key
 
         es_sin_asignar = config.get(key) == "Sin asignar"
@@ -277,7 +223,7 @@ def crear_campos(state):
                     combo_ref.configure(style="Warning.TCombobox")
 
                 # Verificar si todos están asignados
-                if not hay_campos_sin_asignar(config) or (all(vars_[k].get() != "Sin asignar" for k in SUGERENCIAS_COLUMNAS if k not in ("referencia 1", "referencia 2"))):
+                if not utils.hay_campos_sin_asignar(config) or (all(vars_[k].get() != "Sin asignar" for k in utils.SUGERENCIAS_COLUMNAS if k not in ("referencia 1", "referencia 2"))):
                     if state.get("advertencia_label"):
                         state["advertencia_label"].destroy()
                         state["advertencia_label"] = None
@@ -290,11 +236,11 @@ def crear_campos(state):
         # Aquí llamamos a la función pasándole las variables correctas
         bind_trace(var, key, label, combo)
         
-    row_total = offset + len(SUGERENCIAS_COLUMNAS)
+    row_total = offset + len(utils.SUGERENCIAS_COLUMNAS)
     Label(frame_total, text="Divisa").grid(row=row_total, column=0, sticky='e', padx=(0, 10), pady=5)
     var_divisa = tk.StringVar(value=config.get('divisa_nombre', 'Euro (EUR)'))
     vars_['divisa_nombre'] = var_divisa
-    Combobox(frame_total, textvariable=var_divisa, values=list(DIVISAS.keys()), width=33, bootstyle="success")\
+    Combobox(frame_total, textvariable=var_divisa, values=list(utils.DIVISAS.keys()), width=33, bootstyle="success")\
         .grid(row=row_total, column=1, sticky='ew', padx=5, pady=5)
 
     Button(frame_total, text="📝 Editar archivo CSV", bootstyle="secondary",
@@ -357,7 +303,7 @@ def guardar_configuracion(state):
         config[k] = var.get()
 
     # Detectar campos obligatorios sin asignar
-    for campo in SUGERENCIAS_COLUMNAS:
+    for campo in utils.SUGERENCIAS_COLUMNAS:
         if campo in ('referencia 1', 'referencia 2'):
             continue  # No obligatorios
         if config.get(campo) == "Sin asignar":
@@ -375,9 +321,9 @@ def guardar_configuracion(state):
 
     # Guardar divisa
     nombre_divisa = config.get('divisa_nombre', 'Euro (EUR)')
-    config['divisa_codigo'] = DIVISAS.get(nombre_divisa, '978')
+    config['divisa_codigo'] = utils.DIVISAS.get(nombre_divisa, '978')
 
-    guardar_config(config)
+    utils.guardar_config(config)
     if "config" in ventanas_abiertas:
         ventanas_abiertas["config"] = None
     state['window'].destroy()
@@ -410,10 +356,10 @@ def cambiar_plantilla_csv(state, archivo=None):
             with open(archivo, 'r', encoding='utf-8') as f:
                 sample = f.read(2048)
                 state['config']['sep'] = csv.Sniffer().sniff(sample).delimiter
-            for clave in SUGERENCIAS_COLUMNAS:
+            for clave in utils.SUGERENCIAS_COLUMNAS:
                 state['config'][clave] = "Sin asignar"
 
-            guardar_config(state['config'])
+            utils.guardar_config(state['config'])
             if "config" in ventanas_abiertas:
                 ventanas_abiertas["config"] = None 
                 if state['window']:

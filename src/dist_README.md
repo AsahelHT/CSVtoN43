@@ -1,5 +1,5 @@
 
-# CSVtoN43 (README WIP)
+# CSVtoN43 
 
 **CSVtoN43** es una aplicación de escritorio desarrollada en Python que permite convertir archivos bancarios en formato CSV a **Norma 43 (AEB43)**, el estándar español para el intercambio de extractos bancarios entre empresas y entidades financieras.
 
@@ -20,21 +20,19 @@
 
 ---
 
-## 📁 Estructura del proyecto
+## 📁 Estructura de la distribución
 
 ```text
-CSVtoN43/
-├── src/           
-│   ├── assets/                     # Recursos gráficos como iconos, logotipos, etc.
-│   │   └── csv2n43.ico             # Icono de la aplicación para PyInstaller.                 
-│   ├── CSVtoN43_CFG.json           # Configuración base utilizada si no hay ajustes previos del usuario.
-│   ├── converter.py                # Lógica de conversión de datos desde CSV a Norma 43.
-│   ├── CSVtoN43.py                 # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
-│   ├── preview_gui.py              # Ventana de previsualización con coloreado y comparación de datos.
-│   ├── config_gui.py               # Ventana de configuración de columnas y campos del CSV.
-│   ├── app.py                      # Funciones auxiliares para manejo de fechas, nombres, formatos, etc.
-│   └── requirements.txt            # Librerías necesarias para ejecutar el proyecto.
-└──README.md                        # Este archivo.
+CSVtoN43/          
+├── assets/                     # Recursos gráficos como iconos, logotipos, etc.
+│   └── csv2n43.ico             # Icono de la aplicación para PyInstaller.                 
+├── CSVtoN43_CFG.json           # Configuración base utilizada si no hay ajustes previos del usuario.
+├── converter.py                # Lógica de conversión de datos desde CSV a Norma 43.
+├── CSVtoN43.py                 # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
+├── preview_gui.py              # Ventana de previsualización con coloreado y comparación de datos.
+├── config_gui.py               # Ventana de configuración de columnas y campos del CSV.
+├── csv2n43_utils.py            # Funciones auxiliares para manejo de fechas, nombres, formatos, etc.
+└── dist_README.md              # Este archivo.
 ```
 
 ## 📖 Manual de usuario
@@ -42,9 +40,6 @@ CSVtoN43/
 ### 1. Cargar un archivo CSV
 Al iniciar la aplicación, pulsa **“EMPEZAR”** y selecciona tu fichero de movimientos bancarios. 
 Puede accerderse a la ventana de configuración mediante el botón **⚙️** y a la información de la app mediante el botón **ℹ️**.
-
-- Interfaz principal
-  ![pantalla principal](assets/main_wd.png)
 
 ### 2. Configurar campos
 La primera vez, se abrirá automáticamente la **ventana de configuración**, donde deberás seleccionar un fichero CSV como plantilla.
@@ -56,19 +51,12 @@ De este fichero CSV se realizará automáticamente:
 
 En esta ventana también puede modificarse la plantilla usada, abriendo el editor que el sistema tenga establecido por defecto para ficheros .csv, o cambiar la plantilla por otro fichero deseado.
 
-- Vista de configuración de campos  
-  ![configuración](assets/cfg_wd.png)
-
-
 ### 3. Previsualizar conversión
 Antes de guardar, podrás ver una **previsualización** que:
 - Muestra las 7 primeras líneas del CSV original.
 - Presenta las 5 primeras y 2 últimas líneas del fichero generado en Norma 43.
 - Colorea los campos para facilitar la correspondencia entre ambos formatos.
 - Para convertir. Pulsa **“CONVERTIR”**.
-
-- Ejemplo de previsualización con colores  
-  ![previsualización](assets/prev_wd.png)
 
 ### 4. Exportar a Norma 43
 Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El nombre se generará automáticamente y se te ofrecerá una ubicación para guardarlo.
@@ -81,32 +69,8 @@ Pulsa **“Guardar archivo Norma 43”** para generar el fichero compatible. El 
 - Sistema operativo: Windows
 - Dependencias:
 
-```bash
-pip install -r requirements.txt
-```
-
 ---
 
-## 🛠️ Compilación con Nuitka o Pyinstaller (opcional)
-
-Si quieres generar un ejecutable `.exe` para Windows:
-
-```bash
-pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../assets/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "assets/csv2n43.ico;assets"
-
-```
-```bash
-python -m nuitka --standalone --enable-plugin=tk-inter --enable-plugin=tk-inter --include-package-data=numpy --include-package-data=ttkbootstrap --include-data-file=assets/csv2n43.ico=assets/csv2n43.ico --include-data-file=dist_README.md=dist_README.md  --windows-console-mode=disable --windows-icon-from-ico=assets/csv2n43.ico CSVtoN43.py                
-
----
-
-## 📌 Estado del desarrollo
-
-- ✅ Funcionalidad básica estable.
-- ⚙️ Mejora continua en la usabilidad y validación.
-- 🧪 Pruebas con CSV de diferentes entidades bancarias.
-
----
 
 
 

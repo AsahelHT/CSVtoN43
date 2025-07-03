@@ -1,17 +1,19 @@
 # main.py
 # build v2
+import os
+import sys
 
+import csv2n43_utils as utils
 
 import ttkbootstrap as ttk
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from ttkbootstrap.constants import *
-from config_gui import cargar_config, mostrar_configuracion, CONFIG_FILE, guardar_config
+from config_gui import mostrar_configuracion
 from info_gui import mostrar_informacion
 from preview_gui import mostrar_previsualizacion
 
-import os
-import sys
+
 
 if "NUITKA_LAUNCH_TOKEN" in os.environ:
    messagebox.showerror("Error", "Ya existe otra instancia de esta aplicación")
@@ -19,8 +21,8 @@ if "NUITKA_LAUNCH_TOKEN" in os.environ:
 
 os.environ["NUITKA_LAUNCH_TOKEN"] = "1"
 
-from app import ventanas_abiertas, ruta_icono
-
+from csv2n43_utils import ventanas_abiertas, ruta_icono
+import csv2n43_utils
 
 def obtener_ruta_icono():
     if hasattr(sys, '_MEIPASS'):
@@ -48,14 +50,11 @@ def iniciar_aplicacion():
         tema_en_cooldown["estado"] = False
         actualizar_estado_boton_tema()
 
-    def cambiar_tema(app,btn):
+    def cambiar_tema(app):
         nuevo_tema = "flatly" if tema_actual["nombre"] == "darkly" else "darkly"
-        app.style.theme_use(nuevo_tema)
-        tema_actual["nombre"] = nuevo_tema
-        btn.config(text="🌞" if nuevo_tema == "darkly" else "🌙")
         
         config['tema'] = nuevo_tema
-        guardar_config(config)
+        utils.guardar_config(config)
         
         # Reiniciar la aplicación
         if "NUITKA_LAUNCH_TOKEN" in os.environ:
@@ -66,16 +65,23 @@ def iniciar_aplicacion():
         os.execl(python, python, *sys.argv)
 
 
-    config, existe_config = cargar_config()
+    config, existe_config = utils.cargar_config()
 
     tema_actual = {"nombre": config.get("tema", "darkly")} 
     tema_en_cooldown = {"estado": False} 
 
     app = ttk.Window(title="CSVtoN43", themename=tema_actual["nombre"])
-    
-    app.geometry("500x250")
-    app.iconbitmap(ruta_icono)
+    app.withdraw()
+    try:
+        app.iconbitmap(ruta_icono)
+    except Exception as e:
+        if csv2n43_utils.show_ico_warn:
+            messagebox.showwarning("Archivo no encontrado", "No se encontró la imagen de icono de la aplicación: csv2n43.ico")
+            csv2n43_utils.show_ico_warn = False 
+        
+    app.deiconify()
 
+    app.geometry("500x250")
     app.resizable(False, False)
     ventanas_abiertas["root"] = app
     # Frame superior para botones info y configuración
@@ -106,7 +112,7 @@ def iniciar_aplicacion():
     bottom_frame = ttk.Frame(app)
     bottom_frame.pack(side="bottom", fill="x", pady=5, padx=10)
 
-    btn_tema = ttk.Button(bottom_frame,text="🌞" if config['tema'] == "darkly" else "🌙", width=3, bootstyle="secondary-outline", command=lambda:cambiar_tema(app,btn_tema))
+    btn_tema = ttk.Button(bottom_frame,text="🌞" if config['tema'] == "darkly" else "🌙", width=3, bootstyle="secondary-outline", command=lambda:cambiar_tema(app))
     btn_tema.pack(side="left")
 
 
@@ -115,12 +121,12 @@ def iniciar_aplicacion():
         return any(isinstance(w, tk.Toplevel) and w.winfo_exists() for w in root.winfo_children())
 
     def comprobar_configuracion():
-        if not os.path.exists(CONFIG_FILE):
+        if not os.path.exists(utils.CONFIG_FILE):
             btn_config.config(text="⚙️❗", bootstyle="danger-outline", width=4)
             btn_convertir.config(state="disabled")
         else:
             # Carga la config actual para saber si hay campos sin asignar
-            nueva_config, _ = cargar_config()
+            nueva_config, _ = utils.cargar_config()
             config.update(nueva_config)  # actualiza el dict
 
             if hay_campos_sin_asignar(config) == 2:
