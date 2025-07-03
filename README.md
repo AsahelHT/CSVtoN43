@@ -23,18 +23,18 @@
 ## 📁 Estructura del proyecto
 
 ```text
-CSVtoN43/
-├── src/           
-│   ├── assets/                     # Recursos gráficos como iconos, logotipos, etc.
-│   │   └── csv2n43.ico             # Icono de la aplicación para PyInstaller.                 
-│   ├── CSVtoN43_CFG.json           # Configuración base utilizada si no hay ajustes previos del usuario.
-│   ├── converter.py                # Lógica de conversión de datos desde CSV a Norma 43.
-│   ├── CSVtoN43.py                 # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
-│   ├── preview_gui.py              # Ventana de previsualización con coloreado y comparación de datos.
-│   ├── config_gui.py               # Ventana de configuración de columnas y campos del CSV.
-│   ├── app.py                      # Funciones auxiliares para manejo de fechas, nombres, formatos, etc.
-│   └── requirements.txt            # Librerías necesarias para ejecutar el proyecto.
-└──README.md                        # Este archivo.
+📁 CSVtoN43/
+├── 📁 src/           
+│   ├── 🖼️ assets/            # Recursos gráficos como iconos, logotipos, etc.
+│   │   └── 🖼️ csv2n43.ico    # Icono de la aplicación para PyInstaller.                 
+│   ├── ⚙️ CSVtoN43_CFG.json  # Configuración base utilizada si no hay ajustes previos del usuario.
+│   ├── 🔄 converter.py       # Lógica de conversión de datos desde CSV a Norma 43.
+│   ├── 🖥️ CSVtoN43.py        # Interfaz principal de la aplicación con tkinter y ttkbootstrap.
+│   ├── 👁️ preview_gui.py     # Ventana de previsualización con coloreado y comparación de datos.
+│   ├── 🛠️ config_gui.py      # Ventana de configuración de columnas y campos del CSV.
+│   ├── 🧩 csv2n43_utils.py   # Funciones globales y auxiliares para manejo de fechas, nombres, formatos, etc.
+│   └── 📦 requirements.txt   # Librerías necesarias para ejecutar el proyecto.
+└── 📄 README.md              # Este archivo.
 ```
 
 ## 📖 Manual de usuario
@@ -92,7 +92,7 @@ pip install -r requirements.txt
 Si quieres generar un ejecutable `.exe` para Windows:
 
 ```bash
-pyinstaller --noconsole --noconfirm --onedir --windowed --icon=../assets/csv2n43.ico --name=CSVtoN43 main_gui.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "assets/csv2n43.ico;assets"
+pyinstaller --noconsole --noconfirm --onedir --windowed --icon=assets/csv2n43.ico --name=CSVtoN43 CSVtoN43.py --collect-all ttkbootstrap --hidden-import=ttkbootstrap --noupx --add-data "assets/csv2n43.ico;assets"
 
 ```
 ```bash
